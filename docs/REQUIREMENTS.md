@@ -23,14 +23,14 @@ is one step of the game clock. The **turn log** is the list of accepted turns, e
 | R-L11 | When the grub fills the grid and no cell is free for dew, the game ends with cause `full`. |
 | R-L12 | Every accepted turn is logged with its tick; rejected turns are not. `replay(seed, log)` reproduces the final state hash. The log encodes to a URL-safe string and decodes back unchanged; a malformed string is rejected. |
 | R-L13 | Seed parsing: a string of digits is that number (mod 2^32); any other non-empty string is hashed to a number; missing or empty gives no seed. |
-| R-L14 | Invariants hold on every tick of 200 seeded games played by a scripted player and by random input: every grub cell is inside the grid, no two grub cells are equal while playing, dew and spore are never on the grub when placed, score = 10 × dew + 50 × spores, length = 3 + dew. |
+| R-L14 | Invariants hold on every tick of 200 seeded games, 100 played by a scripted player and 100 by random input: every grub cell is inside the grid, no two grub cells are equal while playing, dew and spore are never on the grub when placed, score = 10 × dew + 50 × spores, length = 3 + dew. |
 | R-L15 | `step` reports what happened (`eat`, `spore`, `spore-appear`, `spore-gone`, `over`) so the page can play sounds without reading private state. |
 
 ## Presentation rules that need no browser
 
 | id | rule |
 |---|---|
-| R-P1 | The pixel font is made here: every glyph is 3×5 cells, no two glyphs are identical, and every character of every text the game draws has a glyph. |
+| R-P1 | The pixel font is made here: every glyph is 5 cells high and 3 wide (M and W: 5 wide), no two glyphs are identical, and every character of every text the game draws has a glyph. |
 | R-P2 | Every event of R-L15, plus `start` and `turn`, has a sound recipe made of oscillator notes: frequency 80–4000 Hz, total length at most 1 s, peak gain at most 0.3. |
 | R-P3 | Key mapping: arrows and WASD steer; Space and Enter start or restart; P pauses; M mutes. Swipe mapping: a move of at least 24 px picks the dominant axis; a shorter move is a tap. |
 
@@ -46,10 +46,12 @@ is one step of the game clock. The **turn log** is the list of accepted turns, e
 | R-B6 | Replay: a scripted player plays a real-time game to game over. Node then replays `(seed, turn log)` and gets the same hash and score. The replay link the page offers plays back to the same hash in the browser. |
 | R-B7 | No network: the page makes no request other than loading itself, carries a Content-Security-Policy with `default-src 'none'`, and the built file contains no `http://` or `https://` address and no call to a network API. |
 | R-B8 | Sound: eating dew schedules the `eat` recipe on the page's own audio context; with mute on, nothing is scheduled. |
-| R-B9 | Fit: at 390×844, 360×640 and 844×390 the whole canvas is inside the viewport and the page does not scroll. |
+| R-B9 | Fit: at 390×844, 360×640, 844×390 and 320×568 the canvas and every item of the bar under it are inside the viewport, also with a four-digit score, and the page does not scroll. |
 | R-B10 | The built file works opened from disk (`file://`): it loads and a game can be started. |
 | R-B11 | Pause: P stops the clock (the tick does not advance for 600 ms) and P again resumes it. A hidden tab pauses the game. |
 | R-B12 | Originality rules of the brief that a machine can check: the built page and the README title contain none of the banned names, and the repository holds no image, audio or font file. |
+| R-B13 | The two controls under the board behave as controls (added in v4, after the blind review): Enter or Space on the focused sound button toggles the sound and does not start a game; Enter on the focused replay link opens the replay; arrow keys still steer whatever has focus. Only the left mouse button plays: a right or middle click does nothing, a left click is a tap, a left drag is a swipe. |
+| R-B14 | The board's accessible label says what is happening (added in v4, after the blind review): how to start, playing, paused, or game over with the cause and the score. The page does not forbid zooming. |
 
 ## Not provable by these tests
 
@@ -60,4 +62,6 @@ is one step of the game clock. The **turn log** is the list of accepted turns, e
 | NP-3 | It works in Firefox or Safari. Only Chromium is tested. |
 | NP-4 | The sounds are pleasant, or audible at all. The tests see that notes are scheduled, not what comes out of a speaker. |
 | NP-5 | The name is free of trademark claims. One web search was run; no register was checked. |
-| NP-6 | The art looks good. The tests see that something is drawn, not what it looks like to a person. |
+| NP-6 | The art looks good. The tests see that the grub, the dew and the texts are drawn, not what they look like to a person. |
+| NP-7 | A really hidden tab pauses the game. The test fakes the browser's "tab is hidden" signal; headless Chromium has no tab to hide. |
+| NP-8 | It is usable with a screen reader. The label of R-B14 exists; nobody listened to it. |

@@ -59,6 +59,31 @@ test('R-L1 same seed and same turns give the same hash after every tick', () => 
   assert.deepEqual(a.hashes, b.hashes);
 });
 
+// Added after the blind review: the test above only shows that the scripted player repeats itself.
+test('R-L1 a fixed turn log gives the same hashes twice, and a log that differs by one tick diverges there', () => {
+  const run = (seed, log) => {
+    const g = createGame(seed);
+    start(g);
+    const hashes = [];
+    let i = 0;
+    while (g.status === 'playing') {
+      while (i < log.length && log[i].t === g.tick) turn(g, log[i++].d);
+      step(g);
+      hashes.push(stateHash(g));
+    }
+    return hashes;
+  };
+  const log = [{ t: 2, d: 'U' }, { t: 5, d: 'L' }, { t: 7, d: 'D' }];
+  const later = [{ t: 2, d: 'U' }, { t: 5, d: 'L' }, { t: 8, d: 'D' }];
+  const a = run(9, log);
+  assert.ok(a.length > 10);
+  assert.deepEqual(run(9, log), a);
+  const c = run(9, later);
+  assert.deepEqual(c.slice(0, 7), a.slice(0, 7), 'identical until the turn that differs');
+  assert.notEqual(c[7], a[7], 'different from the tick where the logs differ');
+  assert.notEqual(run(10, log)[0], a[0], 'another seed is another run from the first tick');
+});
+
 test('R-L1 different seeds put the first dew in different places', () => {
   const pos = [];
   for (let s = 1; s <= 50; s++) {

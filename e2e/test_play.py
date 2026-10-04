@@ -110,10 +110,15 @@ class PlayTests(BrowserCase):
         self.assertEqual(href, f"?seed=2026&replay={s['logText']}")
         again = self.open(href[1:])
         self.assertTrue(self.state(again)["replaying"])
-        again.keyboard.press("ArrowUp")  # steering a replay does nothing
+        # Steering a replay does nothing: mash all four directions while it runs.
+        for _ in range(3):
+            for key in ("ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"):
+                again.keyboard.press(key)
+                again.wait_for_timeout(60)
         self.wait_status(again, "over", timeout=90000)
         r = self.state(again)
         self.assertEqual((r["hash"], r["score"], r["tick"]), (s["hash"], s["score"], s["tick"]))
+        self.assertEqual(r["logText"], s["logText"])
         self.assertFalse(r["replaying"])
 
         # 3. After the replay, Space starts a normal game with the same seed.
@@ -128,14 +133,26 @@ class PlayTests(BrowserCase):
         self.assertEqual((s["status"], s["replaying"]), ("ready", False))
 
     def test_R_B8_sound_is_scheduled_on_eat_and_not_when_muted(self):
-        page = self.open("seed=123&clock=manual")
+        # An observer the page does not control: count every oscillator the browser is told to start.
+        # (Added after the blind review: the page's own list of played sounds is a self-report.)
+        page = self.open("seed=123&clock=manual", viewport={"width": 900, "height": 760})
+        page.evaluate("""() => {
+            window.__oscStarts = 0;
+            const realStart = OscillatorNode.prototype.start;
+            OscillatorNode.prototype.start = function (...args) { window.__oscStarts++; return realStart.apply(this, args); };
+        }""")
+        starts = lambda: page.evaluate("() => window.__oscStarts")
         self.assertEqual(page.evaluate("() => window.__dewgrub.sounds().context"), "none")
         page.keyboard.press("Space")
+        self.assertEqual(starts(), 3, "the start jingle is 3 notes")
         self.bot_manual(page, lambda s: s["score"] >= 10)
         page.wait_for_function("() => window.__dewgrub.sounds().context === 'running'")
-        names = [p["name"] for p in page.evaluate("() => window.__dewgrub.sounds().played")]
+        played = page.evaluate("() => window.__dewgrub.sounds().played")
+        names = [p["name"] for p in played]
         self.assertEqual(names[0], "start")
         self.assertEqual(names.count("eat"), 1)
+        self.assertEqual(starts(), sum(p["notes"] for p in played), "one oscillator per note of every sound played")
+        before_mute = starts()
 
         page.keyboard.press("m")
         self.assertTrue(self.state(page)["muted"])
@@ -144,6 +161,7 @@ class PlayTests(BrowserCase):
         self.assertGreaterEqual(self.state(page)["score"], 30)
         muted_names = [p["name"] for p in page.evaluate("() => window.__dewgrub.sounds().played")]
         self.assertEqual(muted_names, names, "nothing may be scheduled while muted")
+        self.assertEqual(starts(), before_mute, "no oscillator may start while muted")
 
         page.click("#mute")
         self.assertFalse(self.state(page)["muted"])
@@ -159,6 +177,9 @@ class PlayTests(BrowserCase):
             page.keyboard.press("ArrowUp")
             self.step(page, 30)  # game over: the bar now shows all three of its items
             self.assertEqual(self.state(page)["status"], "over")
+            # The widest score the bar can ever show. Simulated: nobody here played to 9999
+            # (the grid allows at most about 7900).
+            page.evaluate("() => { document.getElementById('score').textContent = 'Score 9999'; }")
             box = page.evaluate("""() => {
                 const r = (el) => { const b = el.getBoundingClientRect(); return [b.left, b.top, b.right, b.bottom]; };
                 const items = [document.getElementById('board'), ...document.getElementById('bar').children]

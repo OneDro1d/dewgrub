@@ -15,7 +15,8 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
-DIST = ROOT / "dist"
+# DEWGRUB_DIST points the tests at another build (tools/mutate-page.mjs uses it for deliberately broken pages).
+DIST = Path(os.environ.get("DEWGRUB_DIST") or ROOT / "dist")
 KEY = {"U": "ArrowUp", "D": "ArrowDown", "L": "ArrowLeft", "R": "ArrowRight"}
 PHONE = dict(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True, device_scale_factor=3)
 

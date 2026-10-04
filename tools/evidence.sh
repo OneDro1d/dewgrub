@@ -1,30 +1,40 @@
 #!/usr/bin/env bash
-# Runs every check and stores the raw output as the evidence of one version.
-# Usage: tools/evidence.sh v3        (run it on a clean, committed tree)
+# Runs every check on a CLEAN CHECKOUT of the current commit and stores the raw output as evidence.
+# Usage: tools/evidence.sh v4            (full check, about 8 minutes)
+#        tools/evidence.sh v4 --quick    (skips the deliberately broken pages)
+# The clean checkout is a fresh "git clone" of this repository into a temporary folder, so files that
+# exist only in the working folder cannot make a check pass.
 set -u
 cd "$(dirname "$0")/.."
-v="${1:?usage: tools/evidence.sh vN}"
+v="${1:?usage: tools/evidence.sh vN [--quick]}"
+mode="${2:-}"
+sha="$(git rev-parse HEAD)"
+tmp="$(mktemp -d)"
+git clone -q . "$tmp/checkout"
+git -C "$tmp/checkout" checkout -q "$sha"
 mkdir -p "evidence/$v"
 out="evidence/$v/check-output.txt"
 {
   echo "version:  $v"
   echo "date:     $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  echo "commit:   $(git rev-parse HEAD)"
-  echo "tree:     $(git status --porcelain -- . ':!evidence' | wc -l) uncommitted change(s) outside evidence/"
+  echo "commit:   $sha"
+  echo "where:    a fresh git clone of that commit, in a temporary folder"
   echo "node:     $(node --version)"
-  echo "command:  ./check.sh"
+  echo "command:  ./check.sh $mode"
   echo "----------------------------------------------------------------------"
 } > "$out"
-./check.sh >> "$out" 2>&1
+( cd "$tmp/checkout" && ./check.sh $mode ) >> "$out" 2>&1
 code=$?
 echo "----------------------------------------------------------------------" >> "$out"
 echo "exit code: $code" >> "$out"
+rm -rf "$tmp"
 cat > "evidence/$v/COMMAND.txt" <<EOF
-From the repository root, at the commit named in check-output.txt:
+From a clean checkout of the commit named in check-output.txt:
 
-    ./check.sh
+    ./check.sh $mode
 
-tools/evidence.sh $v ran exactly that and wrote its full output, unedited, to check-output.txt.
+tools/evidence.sh $v $mode did exactly that (git clone into a temporary folder, then ./check.sh) and wrote the
+full output, unedited, to check-output.txt.
 EOF
-tail -n 12 "$out"
+tail -n 6 "$out"
 exit $code

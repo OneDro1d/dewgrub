@@ -1,5 +1,5 @@
 // Draws one frame on a 2D canvas. All art is drawn here, in code. Reads the game state, never changes it.
-import { GLYPHS, TEXTS, textWidth } from './font.js';
+import { TEXTS, textWidth, textCells } from './font.js';
 
 export const CELL = 16;
 export const HUD_H = 48;
@@ -20,17 +20,9 @@ function cellNoise(x, y) {
 
 function drawText(ctx, drawn, text, x, y, scale, colour, align) {
   const w = textWidth(text, scale);
-  let px = align === 'center' ? Math.round(x - w / 2) : align === 'right' ? x - w : x;
+  const px = align === 'center' ? Math.round(x - w / 2) : align === 'right' ? x - w : x;
   ctx.fillStyle = colour;
-  for (const ch of text) {
-    const glyph = GLYPHS[ch];
-    if (glyph) {
-      for (let i = 0; i < 15; i++) {
-        if (glyph[i] === '1') ctx.fillRect(px + (i % 3) * scale, y + Math.floor(i / 3) * scale, scale, scale);
-      }
-    }
-    px += 4 * scale;
-  }
+  for (const c of textCells(text)) ctx.fillRect(px + c.x * scale, y + c.y * scale, scale, scale);
   drawn.push(text);
 }
 

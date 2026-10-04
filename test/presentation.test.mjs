@@ -5,10 +5,10 @@ import { GLYPHS, TEXTS, textWidth, textCells } from '../src/font.js';
 import { SOUNDS, soundLength } from '../src/sounds.js';
 import { keyIntent, swipeDir, SWIPE_MIN } from '../src/input.js';
 
-test('R-P1 every glyph is 3x5 and no two glyphs are the same', () => {
+test('R-P1 every glyph is 5 high, 3 wide (M and W: 5 wide), and no two glyphs are the same', () => {
   const seen = new Map();
   for (const [ch, bits] of Object.entries(GLYPHS)) {
-    assert.match(bits, /^[01]{15}$/, `glyph "${ch}"`);
+    assert.match(bits, ch === 'M' || ch === 'W' ? /^[01]{25}$/ : /^[01]{15}$/, `glyph "${ch}"`);
     assert.ok(!seen.has(bits), `glyph "${ch}" is identical to "${seen.get(bits)}"`);
     seen.set(bits, ch);
   }
@@ -29,6 +29,14 @@ test('R-P1 text layout: width and lit cells', () => {
   assert.deepEqual(textCells('.'), [{ x: 1, y: 4 }]);
   assert.deepEqual(textCells(' .'), [{ x: 5, y: 4 }]);
   assert.equal(textCells('8').length, 13);
+  // W is 5 wide: "WI" is 5 + 1 + 3 cells, and the I starts in column 6.
+  assert.equal(textWidth('WI', 1), 9);
+  assert.equal(textWidth('W', 3), 15);
+  assert.equal(Math.min(...textCells('WI').filter((c) => c.x > 4).map((c) => c.x)), 6);
+  assert.equal(Math.max(...textCells('W').map((c) => c.x)), 4);
+  // A character with no glyph draws nothing and leaves a 3-cell gap.
+  assert.deepEqual(textCells('~'), []);
+  assert.equal(textWidth('~.', 1), 7);
 });
 
 test('R-P2 every game event has a sound recipe inside the limits', () => {

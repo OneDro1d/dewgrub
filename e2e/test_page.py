@@ -14,15 +14,30 @@ class PageTests(BrowserCase):
         self.assertEqual(page.title(), "Dewgrub")
         self.assertEqual(self.state(page)["status"], "ready")
         page.wait_for_function("() => window.__dewgrub.drawn().length > 0")
-        colours = page.evaluate("""(() => {
+        # One read of the canvas (Chromium warns in the console about repeated reads, and a warning fails the test).
+        px = page.evaluate("""() => {
             const c = document.getElementById('board');
             const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
             const seen = new Set();
             for (let i = 0; i < d.length; i += 4) seen.add((d[i] << 16) | (d[i + 1] << 8) | d[i + 2]);
-            return seen.size;
-        })()""")
-        self.assertGreater(colours, 8)
-        self.assertIn("DEWGRUB", page.evaluate("window.__dewgrub.drawn()"))
+            const k = c.width / 320;
+            const s = window.__dewgrub.state();
+            const at = (cell) => {
+                const x = Math.round((cell.x * 16 + 8) * k);
+                const y = Math.round((48 + cell.y * 16 + 8) * k);
+                const i = (y * c.width + x) * 4;
+                return [d[i], d[i + 1], d[i + 2]];
+            };
+            return { colours: seen.size, head: at(s.grub[0]), dew: at(s.dew), empty: at({ x: 2, y: 18 }) };
+        }""")
+        self.assertGreater(px["colours"], 8)
+        self.assertIn("DEWGRUB", page.evaluate("() => window.__dewgrub.drawn()"))
+        # The board itself is drawn: the pixel at the grub's head is green, at the dew blue, at an empty cell dark.
+        r, g, b = px["head"]
+        self.assertTrue(g > 180 and g > b + 40, f"head pixel {px['head']}")
+        r, g, b = px["dew"]
+        self.assertTrue(b > 180 and b > r + 40, f"dew pixel {px['dew']}")
+        self.assertLess(sum(px["empty"]), 150, f"empty cell pixel {px['empty']}")
         # tearDown asserts: no console error or warning, no uncaught exception.
 
     def test_R_B2_keyboard_plays_from_ready_to_over_and_restarts(self):
@@ -117,7 +132,10 @@ class PageTests(BrowserCase):
         self.assertNotIn("connect-src", csp.group(1))
         self.assertNotIn("unsafe", csp.group(1))
         for banned in ["http://", "https://", "fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon", "EventSource",
-                       "import(", "importScripts", "localStorage", "sessionStorage", "document.cookie", "indexedDB"]:
+                       "import(", "importScripts", "localStorage", "sessionStorage", "document.cookie", "indexedDB",
+                       # Leaving the page is also a request (added after the blind review).
+                       "window.open", "location.assign", "location.replace", "location.href", ".submit(", "<form",
+                       "<iframe", "serviceWorker", "new Worker", "new Image", "RTCPeerConnection"]:
             self.assertNotIn(banned, html, f"the built page contains {banned}")
 
     def test_R_B7_the_browser_blocks_a_request_if_one_is_tried(self):

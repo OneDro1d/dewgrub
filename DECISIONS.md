@@ -45,3 +45,22 @@ how fast the machine or the player was.
 clock and lets a test advance ticks one by one. They ship in the built page because the tests must run against the
 same file a player gets. They cannot change the score: the snapshot is a copy, and manual stepping only does what the
 real clock would do.
+
+## D7 — Tests must be seen failing (4 Oct 2026)
+
+A test that has only ever passed has not been shown to check anything. `tools/mutate.mjs` breaks the logic and
+`tools/mutate-page.mjs` breaks the page, one small fault at a time, and each fault must make a test fail. The first
+runs found three holes (two in the unit tests, one in the browser tests), which were closed. Both scripts are part of
+`./check.sh`. Rejected: trusting coverage of rules by test names alone (`tools/trace.mjs`), which shows that a test
+exists, not that it bites.
+
+## D8 — A review finding is a claim until a test fails for it (4 Oct 2026)
+
+Every finding of the blind review was first turned into a test and run against the unfixed page
+(`evidence/v4/red-output.txt`). Only then was the page changed. Findings that could not be tested here are listed as
+not proven instead of being marked fixed.
+
+## D9 — M and W are five cells wide (4 Oct 2026)
+
+At three cells wide the W in the title read as an H in screenshots, twice. The font now has two widths. Rejected:
+keeping a uniform 3×5 font for simplicity; the name of the game has to be readable.

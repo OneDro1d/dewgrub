@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nqE1pwUahCIBqbV2G4xbeS5oqVjXgP2ALiXdMrsgY3c='; style-src 'sha256-6zWeFQ60SWm/0lLDKefkH9uBMNT9frFAjamMNt4oIRE='; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Sitci8KbM6pHTqU/jjoDQYcbmbpQXj7oo2UNDaRkshQ='; style-src 'sha256-AQKIefzkeqJqHyU2/5dW/G77wg3ZnWyn6SFr5K+CPN8='; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="description" content="Dewgrub: steer a hungry grub to the dew. A small arcade game in one file.">
 <link rel="icon" href="data:,">
 <title>Dewgrub</title>
@@ -36,7 +36,7 @@ canvas {
   height: 44px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   white-space: nowrap;
   /* No font is shipped. These three short labels use whatever monospace font the device has. */
   font: 14px monospace;
@@ -47,7 +47,7 @@ canvas {
   background: none;
   border: 1px solid #3f7d46;
   border-radius: 4px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   text-decoration: none;
   cursor: pointer;
 }
@@ -62,7 +62,7 @@ canvas {
   <div id="bar">
     <span id="score" aria-live="polite">Score 0</span>
     <button id="mute" type="button">Sound: on</button>
-    <a id="replay" hidden>Watch replay</a>
+    <a id="replay" hidden>Replay</a>
   </div>
 </main>
 <script>
@@ -278,7 +278,10 @@ function decodeLog(text) {
 }
 
 // ---- font.js ----
-// The pixel font, made here. Each glyph is 3 cells wide and 5 high, written row by row, 1 = lit.
+// The pixel font, made here. Each glyph is 5 cells high, written row by row, 1 = lit.
+// Most glyphs are 3 cells wide; M and W are 5 wide, because at 3 wide they read as H.
+
+const GLYPH_ROWS = 5;
 
 const GLYPHS = {
   A: '010101111101101',
@@ -293,7 +296,7 @@ const GLYPHS = {
   J: '001001001101010',
   K: '101101110101101',
   L: '100100100100111',
-  M: '101111111101101',
+  M: '1000111011101011000110001',
   N: '110101101101101',
   O: '010101101101010',
   P: '110101110100100',
@@ -303,7 +306,7 @@ const GLYPHS = {
   T: '111010010010010',
   U: '101101101101111',
   V: '101101101101010',
-  W: '101101101111101',
+  W: '1000110001101011010101010',
   X: '101101010101101',
   Y: '101101010010010',
   Z: '111001010100111',
@@ -341,22 +344,34 @@ const TEXTS = {
   muted: 'SOUND OFF',
 };
 
-// Width in pixels of a text at a given scale: 3 cells per glyph plus 1 cell between glyphs.
-function textWidth(text, scale) {
-  return text.length === 0 ? 0 : (text.length * 4 - 1) * scale;
+function glyphWidth(ch) {
+  const glyph = GLYPHS[ch];
+  return glyph ? glyph.length / GLYPH_ROWS : 3;
 }
 
-// The lit cells of a text, in cell units from its top-left corner.
+// The lit cells of a text, in cell units from its top-left corner. One empty column between glyphs.
+// A character with no glyph leaves a 3-cell gap.
 function textCells(text) {
   const cells = [];
-  for (let n = 0; n < text.length; n++) {
-    const glyph = GLYPHS[text[n]];
-    if (!glyph) continue;
-    for (let i = 0; i < 15; i++) {
-      if (glyph[i] === '1') cells.push({ x: n * 4 + (i % 3), y: Math.floor(i / 3) });
+  let left = 0;
+  for (const ch of text) {
+    const glyph = GLYPHS[ch];
+    const w = glyphWidth(ch);
+    if (glyph) {
+      for (let i = 0; i < glyph.length; i++) {
+        if (glyph[i] === '1') cells.push({ x: left + (i % w), y: Math.floor(i / w) });
+      }
     }
+    left += w + 1;
   }
   return cells;
+}
+
+// Width in pixels of a text at a given scale.
+function textWidth(text, scale) {
+  let cells = 0;
+  for (const ch of text) cells += glyphWidth(ch) + 1;
+  return cells === 0 ? 0 : (cells - 1) * scale;
 }
 
 // ---- sounds.js ----
@@ -496,17 +511,9 @@ function cellNoise(x, y) {
 
 function drawText(ctx, drawn, text, x, y, scale, colour, align) {
   const w = textWidth(text, scale);
-  let px = align === 'center' ? Math.round(x - w / 2) : align === 'right' ? x - w : x;
+  const px = align === 'center' ? Math.round(x - w / 2) : align === 'right' ? x - w : x;
   ctx.fillStyle = colour;
-  for (const ch of text) {
-    const glyph = GLYPHS[ch];
-    if (glyph) {
-      for (let i = 0; i < 15; i++) {
-        if (glyph[i] === '1') ctx.fillRect(px + (i % 3) * scale, y + Math.floor(i / 3) * scale, scale, scale);
-      }
-    }
-    px += 4 * scale;
-  }
+  for (const c of textCells(text)) ctx.fillRect(px + c.x * scale, y + c.y * scale, scale, scale);
   drawn.push(text);
 }
 
@@ -656,7 +663,7 @@ function drawFrame(ctx, view) {
 // ---- main.js ----
 // The page: wires the clock, the keyboard, the touch screen, the sounds and the canvas to the game logic.
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const RESTART_GUARD_MS = 350; // a key or tap this soon after dying is ignored, so a late move cannot restart
 
 const params = new URLSearchParams(window.location.search);
@@ -705,10 +712,24 @@ function newGame() {
     replaying = false;
   }
   showScore();
+  describe();
 }
 
 function showScore() {
   scoreEl.textContent = `Score ${game.score}`;
+}
+
+const CAUSES = { wall: 'hit the wall', self: 'bit yourself', full: 'the grid is full, you win' };
+
+// The canvas is a picture to a screen reader, so its label says what the picture shows.
+function describe() {
+  let text = 'Playing.';
+  if (replaying) text = 'Replay of a recorded run.';
+  else if (game.status === 'ready') text = 'Press Space or tap to start. Steer with the arrow keys or by swiping.';
+  else if (game.status === 'over') text = `Game over: ${CAUSES[game.cause]}. Score ${game.score}. Press Space or tap to play again.`;
+  else if (paused) text = `Paused. Score ${game.score}. Press P or Space to go on.`;
+  const label = `Dewgrub game board. ${text}`;
+  if (canvas.getAttribute('aria-label') !== label) canvas.setAttribute('aria-label', label);
 }
 
 function tick() {
@@ -726,12 +747,18 @@ function tick() {
       replaying = false;
       replayLog = null;
     }
+    describe();
   }
   showScore();
 }
 
 function act(intent) {
   audio.unlock();
+  handle(intent);
+  describe();
+}
+
+function handle(intent) {
   if (intent.type === 'mute') {
     audio.setMuted(!audio.isMuted());
     muteEl.textContent = audio.isMuted() ? 'Sound: off' : 'Sound: on';
@@ -793,20 +820,25 @@ function fit() {
   pixelScale = canvas.width / VIEW_W;
 }
 
+const onControl = (e) => e.target === muteEl || e.target === replayEl;
+
 window.addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const intent = keyIntent(e.key);
   if (!intent) return;
+  // Enter or Space on the focused sound button or replay link works that control, not the game.
+  if (intent.type === 'go' && onControl(e)) return;
   e.preventDefault();
   if (e.repeat && intent.type !== 'turn') return;
   act(intent);
 });
 
 // One finger: a move of 24 px or more steers (and can steer again without lifting), a shorter touch is a tap.
+// A mouse plays the same way with its left button only.
 let finger = null;
-const onControl = (e) => e.target === muteEl || e.target === replayEl;
 window.addEventListener('pointerdown', (e) => {
   if (onControl(e) || finger) return;
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
   finger = { id: e.pointerId, x: e.clientX, y: e.clientY, steered: false };
 });
 window.addEventListener('pointermove', (e) => {
@@ -827,12 +859,14 @@ window.addEventListener('pointercancel', (e) => {
   if (finger && e.pointerId === finger.id) finger = null;
 });
 
-muteEl.addEventListener('click', () => {
+muteEl.addEventListener('click', (e) => {
   act({ type: 'mute' });
-  muteEl.blur();
+  // After a mouse or touch click, give the keys back to the game. A keyboard click (detail 0) keeps the focus.
+  if (e.detail > 0) muteEl.blur();
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && game.status === 'playing' && !replaying) paused = true;
+  describe();
 });
 window.addEventListener('resize', fit);
 

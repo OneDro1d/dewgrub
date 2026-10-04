@@ -6,7 +6,7 @@ import { keyIntent, swipeDir } from './input.js';
 import { createAudio } from './audio.js';
 import { VIEW_W, VIEW_H, drawFrame } from './render.js';
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const RESTART_GUARD_MS = 350; // a key or tap this soon after dying is ignored, so a late move cannot restart
 
 const params = new URLSearchParams(window.location.search);
@@ -55,10 +55,24 @@ function newGame() {
     replaying = false;
   }
   showScore();
+  describe();
 }
 
 function showScore() {
   scoreEl.textContent = `Score ${game.score}`;
+}
+
+const CAUSES = { wall: 'hit the wall', self: 'bit yourself', full: 'the grid is full, you win' };
+
+// The canvas is a picture to a screen reader, so its label says what the picture shows.
+function describe() {
+  let text = 'Playing.';
+  if (replaying) text = 'Replay of a recorded run.';
+  else if (game.status === 'ready') text = 'Press Space or tap to start. Steer with the arrow keys or by swiping.';
+  else if (game.status === 'over') text = `Game over: ${CAUSES[game.cause]}. Score ${game.score}. Press Space or tap to play again.`;
+  else if (paused) text = `Paused. Score ${game.score}. Press P or Space to go on.`;
+  const label = `Dewgrub game board. ${text}`;
+  if (canvas.getAttribute('aria-label') !== label) canvas.setAttribute('aria-label', label);
 }
 
 function tick() {
@@ -76,12 +90,18 @@ function tick() {
       replaying = false;
       replayLog = null;
     }
+    describe();
   }
   showScore();
 }
 
 function act(intent) {
   audio.unlock();
+  handle(intent);
+  describe();
+}
+
+function handle(intent) {
   if (intent.type === 'mute') {
     audio.setMuted(!audio.isMuted());
     muteEl.textContent = audio.isMuted() ? 'Sound: off' : 'Sound: on';
@@ -143,20 +163,25 @@ function fit() {
   pixelScale = canvas.width / VIEW_W;
 }
 
+const onControl = (e) => e.target === muteEl || e.target === replayEl;
+
 window.addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const intent = keyIntent(e.key);
   if (!intent) return;
+  // Enter or Space on the focused sound button or replay link works that control, not the game.
+  if (intent.type === 'go' && onControl(e)) return;
   e.preventDefault();
   if (e.repeat && intent.type !== 'turn') return;
   act(intent);
 });
 
 // One finger: a move of 24 px or more steers (and can steer again without lifting), a shorter touch is a tap.
+// A mouse plays the same way with its left button only.
 let finger = null;
-const onControl = (e) => e.target === muteEl || e.target === replayEl;
 window.addEventListener('pointerdown', (e) => {
   if (onControl(e) || finger) return;
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
   finger = { id: e.pointerId, x: e.clientX, y: e.clientY, steered: false };
 });
 window.addEventListener('pointermove', (e) => {
@@ -177,12 +202,14 @@ window.addEventListener('pointercancel', (e) => {
   if (finger && e.pointerId === finger.id) finger = null;
 });
 
-muteEl.addEventListener('click', () => {
+muteEl.addEventListener('click', (e) => {
   act({ type: 'mute' });
-  muteEl.blur();
+  // After a mouse or touch click, give the keys back to the game. A keyboard click (detail 0) keeps the focus.
+  if (e.detail > 0) muteEl.blur();
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && game.status === 'playing' && !replaying) paused = true;
+  describe();
 });
 window.addEventListener('resize', fit);
 

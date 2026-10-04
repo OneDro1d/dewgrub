@@ -1,0 +1,75 @@
+test_R_B9_fits_phone_viewports_without_scrolling (test_play.PlayTests.test_R_B9_fits_phone_viewports_without_scrolling) ... FAIL
+test_R_B13_enter_and_space_on_the_sound_button_toggle_sound_and_do_not_start (test_review.ReviewTests.test_R_B13_enter_and_space_on_the_sound_button_toggle_sound_and_do_not_start) ... FAIL
+test_R_B13_enter_on_the_replay_link_opens_the_replay (test_review.ReviewTests.test_R_B13_enter_on_the_replay_link_opens_the_replay) ... ERROR
+test_R_B13_only_the_left_mouse_button_plays (test_review.ReviewTests.test_R_B13_only_the_left_mouse_button_plays) ... FAIL
+test_R_B14_the_board_label_tells_the_game_status (test_review.ReviewTests.test_R_B14_the_board_label_tells_the_game_status) ... FAIL
+
+======================================================================
+ERROR: test_R_B13_enter_on_the_replay_link_opens_the_replay (test_review.ReviewTests.test_R_B13_enter_on_the_replay_link_opens_the_replay)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/coder/code/onedro1d/showcase-s2/e2e/test_review.py", line 36, in test_R_B13_enter_on_the_replay_link_opens_the_replay
+    with page.expect_navigation():
+         ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/coder/.local/share/smm-venv/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 85, in __exit__
+    self._event.value
+  File "/home/coder/.local/share/smm-venv/lib/python3.14/site-packages/playwright/_impl/_sync_base.py", line 59, in value
+    raise exception
+  File "/home/coder/.local/share/smm-venv/lib/python3.14/site-packages/playwright/_impl/_frame.py", line 265, in continuation
+    event = await waiter.result()
+            ^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TimeoutError: Timeout 30000ms exceeded.
+=========================== logs ===========================
+waiting for navigation until 'load'
+============================================================
+
+======================================================================
+FAIL: test_R_B9_fits_phone_viewports_without_scrolling (test_play.PlayTests.test_R_B9_fits_phone_viewports_without_scrolling)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/coder/code/onedro1d/showcase-s2/e2e/test_play.py", line 194, in test_R_B9_fits_phone_viewports_without_scrolling
+    self.assertGreaterEqual(left, 0, label)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: -4.65625 not greater than or equal to 0 : 320x568
+
+======================================================================
+FAIL: test_R_B13_enter_and_space_on_the_sound_button_toggle_sound_and_do_not_start (test_review.ReviewTests.test_R_B13_enter_and_space_on_the_sound_button_toggle_sound_and_do_not_start)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/coder/code/onedro1d/showcase-s2/e2e/test_review.py", line 16, in test_R_B13_enter_and_space_on_the_sound_button_toggle_sound_and_do_not_start
+    self.assertEqual((s["status"], s["muted"]), ("ready", True))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('playing', False) != ('ready', True)
+
+First differing element 0:
+'playing'
+'ready'
+
+- ('playing', False)
++ ('ready', True)
+
+======================================================================
+FAIL: test_R_B13_only_the_left_mouse_button_plays (test_review.ReviewTests.test_R_B13_only_the_left_mouse_button_plays)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/coder/code/onedro1d/showcase-s2/e2e/test_review.py", line 45, in test_R_B13_only_the_left_mouse_button_plays
+    self.assertEqual(self.state(page)["status"], "ready")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'playing' != 'ready'
+- playing
++ ready
+
+
+======================================================================
+FAIL: test_R_B14_the_board_label_tells_the_game_status (test_review.ReviewTests.test_R_B14_the_board_label_tells_the_game_status)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/coder/code/onedro1d/showcase-s2/e2e/test_review.py", line 60, in test_R_B14_the_board_label_tells_the_game_status
+    self.assertIn("Press Space or tap to start", label())
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Press Space or tap to start' not found in 'Dewgrub game board'
+
+----------------------------------------------------------------------
+Ran 5 tests in 32.523s
+
+FAILED (failures=4, errors=1)

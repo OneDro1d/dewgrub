@@ -1,0 +1,28 @@
+caught    a swipe does not steer  <- test_R_B3_touch_tap_starts_swipes_steer_tap_restarts
+caught    a tap does nothing  <- test_R_B3_touch_tap_starts_swipes_steer_tap_restarts
+caught    a swipe after game over restarts the game  <- test_R_B3_touch_tap_starts_swipes_steer_tap_restarts
+caught    one finger can steer only once  <- test_R_B3_one_long_swipe_can_steer_twice
+caught    the W, A, S, D keys are dead  <- test_R_B2_keyboard_plays_from_ready_to_over_and_restarts
+caught    an arrow key restarts a finished game  <- test_R_B2_arrow_keys_do_not_restart_a_finished_game
+caught    the score on the page is never updated  <- test_R_B4_score_on_the_page_is_the_logic_score
+caught    the seed in the address is ignored  <- test_R_B5_same_seed_and_same_keys_give_the_same_run
+caught    every game without a seed uses seed 1  <- test_R_B5_without_a_seed_each_game_gets_its_own_seed
+caught    a replay ignores the turn log  <- test_R_B6_real_time_run_replays_to_the_same_result
+caught    the replay link carries no turns  <- test_R_B6_real_time_run_replays_to_the_same_result
+SURVIVED  a replay can be steered  (test_R_B6_real_time_run_replays_to_the_same_result still passed)
+caught    a broken replay link crashes the page  <- test_R_B6_a_broken_replay_link_falls_back_to_a_normal_game
+caught    the page tries to load a tracking pixel  <- test_R_B7_no_network
+caught    the security policy allows any connection  <- test_R_B7_the_browser_blocks_a_request_if_one_is_tried
+caught    mute does not stop the sounds  <- test_R_B8_sound_is_scheduled_on_eat_and_not_when_muted
+caught    game events play no sound  <- test_R_B8_sound_is_scheduled_on_eat_and_not_when_muted
+caught    the audio is never unlocked  <- test_R_B8_sound_is_scheduled_on_eat_and_not_when_muted
+caught    the canvas ignores the height of the bar  <- test_R_B9_fits_phone_viewports_without_scrolling
+caught    the bar labels may wrap and overflow  <- test_R_B9_fits_phone_viewports_without_scrolling
+caught    pause does not stop the clock  <- test_R_B11_pause_stops_the_clock_and_a_hidden_tab_pauses
+caught    a hidden tab does not pause  <- test_R_B11_pause_stops_the_clock_and_a_hidden_tab_pauses
+caught    the page throws while loading  <- test_R_B1_loads_clean_and_draws
+caught    nothing is drawn on the board  <- test_R_B1_loads_clean_and_draws
+caught    the page uses a module script, which file:// refuses  <- test_R_B10_works_opened_from_disk
+24/25 deliberate page faults were caught by the browser tests
+
+[exited with code 1]

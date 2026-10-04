@@ -1,4 +1,7 @@
-// The pixel font, made here. Each glyph is 3 cells wide and 5 high, written row by row, 1 = lit.
+// The pixel font, made here. Each glyph is 5 cells high, written row by row, 1 = lit.
+// Most glyphs are 3 cells wide; M and W are 5 wide, because at 3 wide they read as H.
+
+export const GLYPH_ROWS = 5;
 
 export const GLYPHS = {
   A: '010101111101101',
@@ -13,7 +16,7 @@ export const GLYPHS = {
   J: '001001001101010',
   K: '101101110101101',
   L: '100100100100111',
-  M: '101111111101101',
+  M: '1000111011101011000110001',
   N: '110101101101101',
   O: '010101101101010',
   P: '110101110100100',
@@ -23,7 +26,7 @@ export const GLYPHS = {
   T: '111010010010010',
   U: '101101101101111',
   V: '101101101101010',
-  W: '101101101111101',
+  W: '1000110001101011010101010',
   X: '101101010101101',
   Y: '101101010010010',
   Z: '111001010100111',
@@ -61,20 +64,32 @@ export const TEXTS = {
   muted: 'SOUND OFF',
 };
 
-// Width in pixels of a text at a given scale: 3 cells per glyph plus 1 cell between glyphs.
-export function textWidth(text, scale) {
-  return text.length === 0 ? 0 : (text.length * 4 - 1) * scale;
+export function glyphWidth(ch) {
+  const glyph = GLYPHS[ch];
+  return glyph ? glyph.length / GLYPH_ROWS : 3;
 }
 
-// The lit cells of a text, in cell units from its top-left corner.
+// The lit cells of a text, in cell units from its top-left corner. One empty column between glyphs.
+// A character with no glyph leaves a 3-cell gap.
 export function textCells(text) {
   const cells = [];
-  for (let n = 0; n < text.length; n++) {
-    const glyph = GLYPHS[text[n]];
-    if (!glyph) continue;
-    for (let i = 0; i < 15; i++) {
-      if (glyph[i] === '1') cells.push({ x: n * 4 + (i % 3), y: Math.floor(i / 3) });
+  let left = 0;
+  for (const ch of text) {
+    const glyph = GLYPHS[ch];
+    const w = glyphWidth(ch);
+    if (glyph) {
+      for (let i = 0; i < glyph.length; i++) {
+        if (glyph[i] === '1') cells.push({ x: left + (i % w), y: Math.floor(i / w) });
+      }
     }
+    left += w + 1;
   }
   return cells;
+}
+
+// Width in pixels of a text at a given scale.
+export function textWidth(text, scale) {
+  let cells = 0;
+  for (const ch of text) cells += glyphWidth(ch) + 1;
+  return cells === 0 ? 0 : (cells - 1) * scale;
 }

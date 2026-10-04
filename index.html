@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-PxIZrxSKpDQ8UKXV/hBWa7d7sLpf6ycEVSiIhzBybAc='; style-src 'sha256-6zWeFQ60SWm/0lLDKefkH9uBMNT9frFAjamMNt4oIRE='; img-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nqE1pwUahCIBqbV2G4xbeS5oqVjXgP2ALiXdMrsgY3c='; style-src 'sha256-6zWeFQ60SWm/0lLDKefkH9uBMNT9frFAjamMNt4oIRE='; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="description" content="Dewgrub: steer a hungry grub to the dew. A small arcade game in one file.">
 <link rel="icon" href="data:,">
 <title>Dewgrub</title>
@@ -656,7 +656,7 @@ function drawFrame(ctx, view) {
 // ---- main.js ----
 // The page: wires the clock, the keyboard, the touch screen, the sounds and the canvas to the game logic.
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const RESTART_GUARD_MS = 350; // a key or tap this soon after dying is ignored, so a late move cannot restart
 
 const params = new URLSearchParams(window.location.search);

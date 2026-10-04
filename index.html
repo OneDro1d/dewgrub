@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-PxIZrxSKpDQ8UKXV/hBWa7d7sLpf6ycEVSiIhzBybAc='; style-src 'sha256-6zWeFQ60SWm/0lLDKefkH9uBMNT9frFAjamMNt4oIRE='; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="description" content="Dewgrub: steer a hungry grub to the dew. A small arcade game in one file.">
+<link rel="icon" href="data:,">
+<title>Dewgrub</title>
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #0c1511;
+  color: #e8f6d8;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+main {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+canvas {
+  display: block;
+  touch-action: none;
+}
+#bar {
+  box-sizing: border-box;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  /* No font is shipped. These three short labels use whatever monospace font the device has. */
+  font: 14px monospace;
+}
+#mute, #replay {
+  font: inherit;
+  color: #9be564;
+  background: none;
+  border: 1px solid #3f7d46;
+  border-radius: 4px;
+  padding: 6px 10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+[hidden] {
+  display: none !important;
+}
+</style>
+</head>
+<body>
+<main>
+  <canvas id="board" width="320" height="368" role="img" aria-label="Dewgrub game board"></canvas>
+  <div id="bar">
+    <span id="score" aria-live="polite">Score 0</span>
+    <button id="mute" type="button">Sound: on</button>
+    <a id="replay" hidden>Watch replay</a>
+  </div>
+</main>
+<script>
+(function () {
+'use strict';
+// ---- game.js ----
+// Dewgrub game logic. Pure: no DOM, no clock, no Math.random. Time is counted in ticks; the caller
+// decides when to call step(). A run is fully described by (seed, turn log).
+
+const COLS = 20;
+const ROWS = 20;
+const SPORE_TICKS = 40;
+const SPORE_EVERY = 5;
+const DEW_POINTS = 10;
+const SPORE_POINTS = 50;
+
+const DELTA = { U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0] };
+const OPPOSITE = { U: 'D', D: 'U', L: 'R', R: 'L' };
+
+// FNV-1a, 32 bit. Used for string seeds and for the state hash.
+function fnv1a(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+// mulberry32. The generator state lives in the game state, so a snapshot carries it.
+function nextRandom(g) {
+  g.rng = (g.rng + 0x6d2b79f5) >>> 0;
+  let t = g.rng;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return (t ^ (t >>> 14)) >>> 0;
+}
+
+function same(a, b) {
+  return a !== null && b !== null && a.x === b.x && a.y === b.y;
+}
+
+// A random cell that holds neither grub, dew nor spore, or null when the grid is full.
+function freeCell(g) {
+  const taken = new Set(g.grub.map((c) => c.y * g.cols + c.x));
+  if (g.dew) taken.add(g.dew.y * g.cols + g.dew.x);
+  if (g.spore) taken.add(g.spore.y * g.cols + g.spore.x);
+  const total = g.cols * g.rows;
+  const freeCount = total - taken.size;
+  if (freeCount <= 0) return null;
+  let n = nextRandom(g) % freeCount;
+  for (let i = 0; i < total; i++) {
+    if (taken.has(i)) continue;
+    if (n === 0) return { x: i % g.cols, y: Math.floor(i / g.cols) };
+    n--;
+  }
+  return null;
+}
+
+function parseSeed(text) {
+  if (text === null || text === undefined || text === '') return null;
+  const s = String(text);
+  if (/^\d+$/.test(s)) return Number(BigInt(s) % 4294967296n);
+  return fnv1a(s);
+}
+
+function createGame(seed) {
+  const cx = Math.floor(COLS / 2);
+  const cy = Math.floor(ROWS / 2);
+  const g = {
+    cols: COLS,
+    rows: ROWS,
+    seed: seed >>> 0,
+    rng: seed >>> 0,
+    grub: [{ x: cx, y: cy }, { x: cx - 1, y: cy }, { x: cx - 2, y: cy }],
+    dir: 'R',
+    queue: [],
+    dew: null,
+    spore: null,
+    score: 0,
+    tick: 0,
+    status: 'ready',
+    cause: null,
+    dewEaten: 0,
+    sporesEaten: 0,
+    log: [],
+  };
+  g.dew = freeCell(g);
+  return g;
+}
+
+function start(g) {
+  if (g.status === 'ready') g.status = 'playing';
+}
+
+// Ask for a turn. Returns true if it was accepted (and logged), false if it was rejected.
+function turn(g, d) {
+  if (g.status === 'over' || !DELTA[d]) return false;
+  const last = g.queue.length ? g.queue[g.queue.length - 1] : g.dir;
+  if (d === last || d === OPPOSITE[last] || g.queue.length >= 2) return false;
+  g.queue.push(d);
+  g.log.push({ t: g.tick, d });
+  return true;
+}
+
+function end(g, cause, events) {
+  g.status = 'over';
+  g.cause = cause;
+  events.push('over');
+  return events;
+}
+
+// Advance one tick. Returns the list of things that happened, for the sounds.
+function step(g) {
+  const events = [];
+  if (g.status !== 'playing') return events;
+  g.tick++;
+  if (g.queue.length) g.dir = g.queue.shift();
+  const head = { x: g.grub[0].x + DELTA[g.dir][0], y: g.grub[0].y + DELTA[g.dir][1] };
+  if (head.x < 0 || head.x >= g.cols || head.y < 0 || head.y >= g.rows) return end(g, 'wall', events);
+
+  const grows = same(head, g.dew);
+  // The tail cell is leaving on this step, so it does not count as body unless the grub grows.
+  const body = grows ? g.grub : g.grub.slice(0, -1);
+  if (body.some((c) => same(c, head))) return end(g, 'self', events);
+
+  g.grub.unshift(head);
+  if (!grows) g.grub.pop();
+
+  if (g.spore) {
+    if (same(head, g.spore)) {
+      g.spore = null;
+      g.score += SPORE_POINTS;
+      g.sporesEaten++;
+      events.push('spore');
+    } else if (--g.spore.ttl <= 0) {
+      g.spore = null;
+      events.push('spore-gone');
+    }
+  }
+
+  if (grows) {
+    g.score += DEW_POINTS;
+    g.dewEaten++;
+    events.push('eat');
+    g.dew = null;
+    g.dew = freeCell(g);
+    if (!g.dew) return end(g, 'full', events);
+    if (g.dewEaten % SPORE_EVERY === 0 && !g.spore) {
+      const c = freeCell(g);
+      if (c) {
+        g.spore = { x: c.x, y: c.y, ttl: SPORE_TICKS };
+        events.push('spore-appear');
+      }
+    }
+  }
+  return events;
+}
+
+function tickMs(g) {
+  return Math.max(70, 150 - 8 * Math.floor(g.dewEaten / 3));
+}
+
+function stateHash(g) {
+  const parts = [
+    g.cols, g.rows, g.seed, g.rng, g.dir, g.queue.join(''), g.status, g.cause, g.score, g.tick,
+    g.dewEaten, g.sporesEaten,
+    g.dew ? `${g.dew.x},${g.dew.y}` : '-',
+    g.spore ? `${g.spore.x},${g.spore.y},${g.spore.ttl}` : '-',
+    g.grub.map((c) => `${c.x},${c.y}`).join(';'),
+  ];
+  return fnv1a(parts.join('|')).toString(16).padStart(8, '0');
+}
+
+// A deep copy plus the derived values a viewer needs. Changing it does not change the game.
+function snapshot(g) {
+  const copy = JSON.parse(JSON.stringify(g));
+  copy.hash = stateHash(g);
+  copy.tickMs = tickMs(g);
+  return copy;
+}
+
+// Play a whole game from a seed and a turn log. After the last logged turn the grub keeps going
+// straight, so it reaches a wall and the game always ends.
+function replay(seed, log) {
+  const g = createGame(seed);
+  start(g);
+  let i = 0;
+  const limit = (log.length ? log[log.length - 1].t : 0) + g.cols * g.rows + 2;
+  while (g.status === 'playing' && g.tick <= limit) {
+    while (i < log.length && log[i].t === g.tick) turn(g, log[i++].d);
+    step(g);
+  }
+  return g;
+}
+
+// "0U.10L": tick in base 36, then the direction letter, joined by dots.
+function encodeLog(log) {
+  return log.map((e) => e.t.toString(36) + e.d).join('.');
+}
+
+function decodeLog(text) {
+  if (text === '') return [];
+  let prev = 0;
+  return String(text).split('.').map((part) => {
+    const m = /^([0-9a-z]+)([UDLR])$/.exec(part);
+    if (!m) throw new Error(`bad turn log entry: "${part}"`);
+    const t = parseInt(m[1], 36);
+    if (!Number.isSafeInteger(t) || t < prev) throw new Error(`bad tick in turn log entry: "${part}"`);
+    prev = t;
+    return { t, d: m[2] };
+  });
+}
+
+// ---- font.js ----
+// The pixel font, made here. Each glyph is 3 cells wide and 5 high, written row by row, 1 = lit.
+
+const GLYPHS = {
+  A: '010101111101101',
+  B: '110101110101110',
+  C: '011100100100011',
+  D: '110101101101110',
+  E: '111100110100111',
+  F: '111100110100100',
+  G: '011100101101011',
+  H: '101101111101101',
+  I: '111010010010111',
+  J: '001001001101010',
+  K: '101101110101101',
+  L: '100100100100111',
+  M: '101111111101101',
+  N: '110101101101101',
+  O: '010101101101010',
+  P: '110101110100100',
+  Q: '010101101110011',
+  R: '110101110101101',
+  S: '011100010001110',
+  T: '111010010010010',
+  U: '101101101101111',
+  V: '101101101101010',
+  W: '101101101111101',
+  X: '101101010101101',
+  Y: '101101010010010',
+  Z: '111001010100111',
+  0: '111101101101111',
+  1: '010110010010111',
+  2: '110001010100111',
+  3: '110001010001110',
+  4: '101101111001001',
+  5: '111100110001110',
+  6: '011100111101111',
+  7: '111001010010010',
+  8: '111101111101111',
+  9: '111101111001110',
+  ' ': '000000000000000',
+  '-': '000000111000000',
+  '.': '000000000000010',
+  '!': '010010010000010',
+  ':': '000010000010000',
+};
+
+// Every fixed text the game draws. Numbers are added at run time and use the digit glyphs.
+const TEXTS = {
+  title: 'DEWGRUB',
+  score: 'SCORE',
+  best: 'BEST',
+  seed: 'SEED',
+  go: 'TAP OR PRESS SPACE',
+  steer: 'SWIPE OR ARROWS TO STEER',
+  over: 'GAME OVER',
+  wall: 'HIT THE WALL',
+  self: 'BIT YOURSELF',
+  full: 'GRID FULL - YOU WIN!',
+  paused: 'PAUSED',
+  replay: 'REPLAY',
+  muted: 'SOUND OFF',
+};
+
+// Width in pixels of a text at a given scale: 3 cells per glyph plus 1 cell between glyphs.
+function textWidth(text, scale) {
+  return text.length === 0 ? 0 : (text.length * 4 - 1) * scale;
+}
+
+// The lit cells of a text, in cell units from its top-left corner.
+function textCells(text) {
+  const cells = [];
+  for (let n = 0; n < text.length; n++) {
+    const glyph = GLYPHS[text[n]];
+    if (!glyph) continue;
+    for (let i = 0; i < 15; i++) {
+      if (glyph[i] === '1') cells.push({ x: n * 4 + (i % 3), y: Math.floor(i / 3) });
+    }
+  }
+  return cells;
+}
+
+// ---- sounds.js ----
+// The sounds, made here: each one is a short list of oscillator notes.
+// f = frequency in Hz, at = start in seconds, dur = length in seconds, gain = peak volume (0..1).
+
+const SOUNDS = {
+  start: [
+    { f: 330, at: 0, dur: 0.07, type: 'square', gain: 0.1 },
+    { f: 494, at: 0.07, dur: 0.07, type: 'square', gain: 0.1 },
+    { f: 659, at: 0.14, dur: 0.12, type: 'square', gain: 0.1 },
+  ],
+  turn: [{ f: 196, at: 0, dur: 0.03, type: 'triangle', gain: 0.08 }],
+  eat: [
+    { f: 784, at: 0, dur: 0.05, type: 'sine', gain: 0.2 },
+    { f: 1175, at: 0.05, dur: 0.09, type: 'sine', gain: 0.2 },
+  ],
+  'spore-appear': [
+    { f: 1319, at: 0, dur: 0.06, type: 'triangle', gain: 0.14 },
+    { f: 1568, at: 0.08, dur: 0.06, type: 'triangle', gain: 0.14 },
+  ],
+  spore: [
+    { f: 523, at: 0, dur: 0.06, type: 'square', gain: 0.1 },
+    { f: 659, at: 0.06, dur: 0.06, type: 'square', gain: 0.1 },
+    { f: 784, at: 0.12, dur: 0.06, type: 'square', gain: 0.1 },
+    { f: 1047, at: 0.18, dur: 0.16, type: 'square', gain: 0.1 },
+  ],
+  'spore-gone': [{ f: 220, at: 0, dur: 0.12, type: 'sine', gain: 0.12 }],
+  over: [
+    { f: 392, at: 0, dur: 0.14, type: 'sawtooth', gain: 0.12 },
+    { f: 311, at: 0.14, dur: 0.14, type: 'sawtooth', gain: 0.12 },
+    { f: 233, at: 0.28, dur: 0.14, type: 'sawtooth', gain: 0.12 },
+    { f: 147, at: 0.42, dur: 0.3, type: 'sawtooth', gain: 0.12 },
+  ],
+};
+
+function soundLength(notes) {
+  return Math.max(...notes.map((n) => n.at + n.dur));
+}
+
+// ---- input.js ----
+// Turns raw keys and finger moves into game intents. Pure, so it is tested without a browser.
+
+const SWIPE_MIN = 24;
+
+const KEYS = {
+  ArrowUp: 'U', ArrowDown: 'D', ArrowLeft: 'L', ArrowRight: 'R',
+  w: 'U', s: 'D', a: 'L', d: 'R',
+  W: 'U', S: 'D', A: 'L', D: 'R',
+};
+
+// key is KeyboardEvent.key. Returns { type: 'turn', dir } | { type: 'go' | 'pause' | 'mute' } | null.
+function keyIntent(key) {
+  if (Object.prototype.hasOwnProperty.call(KEYS, key)) return { type: 'turn', dir: KEYS[key] };
+  if (key === ' ' || key === 'Enter') return { type: 'go' };
+  if (key === 'p' || key === 'P') return { type: 'pause' };
+  if (key === 'm' || key === 'M') return { type: 'mute' };
+  return null;
+}
+
+// A finger move of (dx, dy) pixels. Returns a direction, or null when the move is too short (a tap).
+function swipeDir(dx, dy) {
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_MIN) return null;
+  if (Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? 'R' : 'L';
+  return dy > 0 ? 'D' : 'U';
+}
+
+// ---- audio.js ----
+// Plays the recipes of sounds.js through the Web Audio API. Browser only.
+
+function createAudio(win) {
+  let ctx = null;
+  let muted = false;
+  const played = [];
+
+  // Browsers only allow sound after a key press or a touch, so this is called from every input.
+  function unlock() {
+    if (!ctx) {
+      const AC = win.AudioContext || win.webkitAudioContext;
+      if (!AC) return;
+      try { ctx = new AC(); } catch (e) { ctx = null; return; }
+    }
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+  }
+
+  function play(name) {
+    const notes = SOUNDS[name];
+    if (!notes || muted || !ctx) return false;
+    const t0 = ctx.currentTime + 0.01;
+    for (const n of notes) {
+      const osc = ctx.createOscillator();
+      const amp = ctx.createGain();
+      osc.type = n.type;
+      osc.frequency.value = n.f;
+      amp.gain.setValueAtTime(0.0001, t0 + n.at);
+      amp.gain.linearRampToValueAtTime(n.gain, t0 + n.at + 0.005);
+      amp.gain.exponentialRampToValueAtTime(0.0001, t0 + n.at + n.dur);
+      osc.connect(amp);
+      amp.connect(ctx.destination);
+      osc.start(t0 + n.at);
+      osc.stop(t0 + n.at + n.dur + 0.02);
+    }
+    played.push({ name, notes: notes.length });
+    if (played.length > 500) played.shift();
+    return true;
+  }
+
+  return {
+    unlock,
+    play,
+    setMuted(m) { muted = m; },
+    isMuted() { return muted; },
+    played() { return played.slice(); },
+    contextState() { return ctx ? ctx.state : 'none'; },
+  };
+}
+
+// ---- render.js ----
+// Draws one frame on a 2D canvas. All art is drawn here, in code. Reads the game state, never changes it.
+
+const CELL = 16;
+const HUD_H = 48;
+const VIEW_W = 320;
+const VIEW_H = 368;
+
+const FACING = { U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0] };
+const INK = '#e8f6d8';
+const DIM = '#8fb08a';
+const GOLD = '#ffd65a';
+
+// A fixed pseudo-random number per cell, for the moss specks. It does not touch the game's generator.
+function cellNoise(x, y) {
+  let h = Math.imul(x * 374761393 + y * 668265263 + 12345, 1274126177);
+  h ^= h >>> 15;
+  return h >>> 0;
+}
+
+function drawText(ctx, drawn, text, x, y, scale, colour, align) {
+  const w = textWidth(text, scale);
+  let px = align === 'center' ? Math.round(x - w / 2) : align === 'right' ? x - w : x;
+  ctx.fillStyle = colour;
+  for (const ch of text) {
+    const glyph = GLYPHS[ch];
+    if (glyph) {
+      for (let i = 0; i < 15; i++) {
+        if (glyph[i] === '1') ctx.fillRect(px + (i % 3) * scale, y + Math.floor(i / 3) * scale, scale, scale);
+      }
+    }
+    px += 4 * scale;
+  }
+  drawn.push(text);
+}
+
+function disc(ctx, x, y, r, colour) {
+  ctx.fillStyle = colour;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawSoil(ctx, g) {
+  for (let y = 0; y < g.rows; y++) {
+    for (let x = 0; x < g.cols; x++) {
+      ctx.fillStyle = (x + y) % 2 ? '#16261d' : '#132119';
+      ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+      const n = cellNoise(x, y);
+      if (n % 3 === 0) {
+        ctx.fillStyle = n % 2 ? '#24482f' : '#1d3a27';
+        ctx.fillRect(x * CELL + (n >>> 4) % 13, y * CELL + (n >>> 8) % 13, 2, 2);
+        ctx.fillRect(x * CELL + (n >>> 12) % 14, y * CELL + (n >>> 16) % 14, 1, 1);
+      }
+    }
+  }
+}
+
+function drawDew(ctx, dew, now) {
+  const cx = dew.x * CELL + CELL / 2;
+  const cy = dew.y * CELL + CELL / 2;
+  const r = 5 + 0.7 * Math.sin(now / 280);
+  const shade = ctx.createRadialGradient(cx - 1.5, cy - 1.5, 0.5, cx, cy, r);
+  shade.addColorStop(0, '#e9fbff');
+  shade.addColorStop(0.45, '#7fd6ff');
+  shade.addColorStop(1, '#2f7fc4');
+  disc(ctx, cx, cy, r, shade);
+  disc(ctx, cx - 1.8, cy - 1.9, 1.2, '#ffffff');
+}
+
+function drawSpore(ctx, spore, now, fullTtl) {
+  const cx = spore.x * CELL + CELL / 2;
+  const cy = spore.y * CELL + CELL / 2;
+  const spin = now / 500;
+  ctx.fillStyle = GOLD;
+  ctx.beginPath();
+  for (let i = 0; i < 16; i++) {
+    const r = i % 2 ? 3 : 6.5;
+    const a = spin + (i * Math.PI) / 8;
+    ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+  }
+  ctx.closePath();
+  ctx.fill();
+  disc(ctx, cx, cy, 1.8, '#fff6c8');
+  // The ring shows how long the spore will stay.
+  ctx.strokeStyle = '#fff3b0';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 7.6, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * spore.ttl) / fullTtl);
+  ctx.stroke();
+}
+
+function drawGrub(ctx, g) {
+  const dead = g.status === 'over' && g.cause !== 'full';
+  const mid = (c) => [c.x * CELL + CELL / 2, c.y * CELL + CELL / 2];
+  for (let i = g.grub.length - 1; i >= 0; i--) {
+    const [x, y] = mid(g.grub[i]);
+    const colour = dead ? (i % 2 ? '#8a6a55' : '#a17a60') : (i % 2 ? '#6fc24a' : '#9be564');
+    if (i < g.grub.length - 1) {
+      const [nx, ny] = mid(g.grub[i + 1]);
+      disc(ctx, (x + nx) / 2, (y + ny) / 2, 5.6, colour);
+    }
+    disc(ctx, x, y, i === 0 ? 7.4 : 6.4, i === 0 ? (dead ? '#b98a6a' : '#c5f58a') : colour);
+    if (i > 0 && i % 2 === 0) disc(ctx, x, y, 1.6, dead ? '#6b5142' : '#4f9a37');
+  }
+  const [hx, hy] = mid(g.grub[0]);
+  const [fx, fy] = FACING[g.dir];
+  for (const side of [-1, 1]) {
+    const ex = hx + fx * 2.6 + -fy * 3.2 * side;
+    const ey = hy + fy * 2.6 + fx * 3.2 * side;
+    if (dead) {
+      ctx.strokeStyle = '#2a1a14';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(ex - 1.6, ey - 1.6);
+      ctx.lineTo(ex + 1.6, ey + 1.6);
+      ctx.moveTo(ex + 1.6, ey - 1.6);
+      ctx.lineTo(ex - 1.6, ey + 1.6);
+      ctx.stroke();
+    } else {
+      disc(ctx, ex, ey, 2.3, '#ffffff');
+      disc(ctx, ex + fx * 0.9, ey + fy * 0.9, 1.1, '#10200f');
+    }
+  }
+}
+
+function panel(ctx, y, h) {
+  ctx.fillStyle = 'rgba(8, 14, 11, 0.8)';
+  ctx.fillRect(16, y, VIEW_W - 32, h);
+  ctx.strokeStyle = '#5fae57';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(17, y + 1, VIEW_W - 34, h - 2);
+}
+
+// view: { g, best, paused, muted, replaying, now, sporeTicks }. Returns the list of texts it drew.
+function drawFrame(ctx, view) {
+  const g = view.g;
+  const drawn = [];
+  const mid = VIEW_W / 2;
+
+  ctx.fillStyle = '#0c1511';
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  drawText(ctx, drawn, TEXTS.title, 6, 6, 3, '#9be564');
+  drawText(ctx, drawn, `${TEXTS.seed} ${g.seed}`, 6, 32, 2, DIM);
+  drawText(ctx, drawn, `${TEXTS.score} ${g.score}`, VIEW_W - 6, 6, 2, INK, 'right');
+  drawText(ctx, drawn, `${TEXTS.best} ${view.best}`, VIEW_W - 6, 19, 2, DIM, 'right');
+  if (view.replaying) drawText(ctx, drawn, TEXTS.replay, VIEW_W - 6, 32, 2, GOLD, 'right');
+  else if (view.muted) drawText(ctx, drawn, TEXTS.muted, VIEW_W - 6, 32, 2, DIM, 'right');
+
+  ctx.save();
+  ctx.translate(0, HUD_H);
+  drawSoil(ctx, g);
+  if (g.dew) drawDew(ctx, g.dew, view.now);
+  if (g.spore) drawSpore(ctx, g.spore, view.now, view.sporeTicks);
+  drawGrub(ctx, g);
+  ctx.strokeStyle = '#5fae57';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, g.cols * CELL - 2, g.rows * CELL - 2);
+
+  if (g.status === 'ready') {
+    // Above the middle row, so the grub and its first move stay visible.
+    panel(ctx, 24, 116);
+    drawText(ctx, drawn, TEXTS.title, mid, 40, 6, '#9be564', 'center');
+    drawText(ctx, drawn, TEXTS.go, mid, 90, 2, INK, 'center');
+    drawText(ctx, drawn, TEXTS.steer, mid, 112, 2, DIM, 'center');
+  } else if (g.status === 'over') {
+    panel(ctx, 76, 150);
+    drawText(ctx, drawn, TEXTS.over, mid, 92, 5, g.cause === 'full' ? GOLD : '#ff8a6a', 'center');
+    drawText(ctx, drawn, TEXTS[g.cause] || '', mid, 130, 2, DIM, 'center');
+    drawText(ctx, drawn, `${TEXTS.score} ${g.score}`, mid, 152, 3, INK, 'center');
+    drawText(ctx, drawn, TEXTS.go, mid, 190, 2, INK, 'center');
+  } else if (view.paused) {
+    panel(ctx, 124, 60);
+    drawText(ctx, drawn, TEXTS.paused, mid, 142, 5, INK, 'center');
+  }
+  ctx.restore();
+  return drawn;
+}
+
+// ---- main.js ----
+// The page: wires the clock, the keyboard, the touch screen, the sounds and the canvas to the game logic.
+
+const VERSION = 'v2';
+const RESTART_GUARD_MS = 350; // a key or tap this soon after dying is ignored, so a late move cannot restart
+
+const params = new URLSearchParams(window.location.search);
+const urlSeed = parseSeed(params.get('seed'));
+const manualClock = params.get('clock') === 'manual';
+let replayLog = null;
+if (urlSeed !== null && params.has('replay')) {
+  try { replayLog = decodeLog(params.get('replay')); } catch (e) { replayLog = null; }
+}
+
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const muteEl = document.getElementById('mute');
+const replayEl = document.getElementById('replay');
+const audio = createAudio(window);
+
+let game = null;
+let best = 0;
+let paused = false;
+let replaying = false;
+let replayAt = 0;
+let overAt = 0;
+let lastFrame = null;
+let carry = 0;
+let lastDrawn = [];
+let pixelScale = 1;
+
+function freshSeed() {
+  if (urlSeed !== null) return urlSeed;
+  if (window.crypto && window.crypto.getRandomValues) return window.crypto.getRandomValues(new Uint32Array(1))[0];
+  return Date.now() >>> 0;
+}
+
+function newGame() {
+  game = createGame(freshSeed());
+  paused = false;
+  carry = 0;
+  replayEl.hidden = true;
+  if (replayLog) {
+    // A replay runs once, on its own, straight after the page loads.
+    replaying = true;
+    replayAt = 0;
+    start(game);
+  } else {
+    replaying = false;
+  }
+  showScore();
+}
+
+function showScore() {
+  scoreEl.textContent = `Score ${game.score}`;
+}
+
+function tick() {
+  if (replaying) {
+    while (replayAt < replayLog.length && replayLog[replayAt].t === game.tick) turn(game, replayLog[replayAt++].d);
+  }
+  const events = step(game);
+  for (const e of events) audio.play(e);
+  if (game.status === 'over') {
+    overAt = performance.now();
+    best = Math.max(best, game.score);
+    replayEl.href = `?seed=${game.seed}&replay=${encodeLog(game.log)}`;
+    replayEl.hidden = false;
+    if (replaying) {
+      replaying = false;
+      replayLog = null;
+    }
+  }
+  showScore();
+}
+
+function act(intent) {
+  audio.unlock();
+  if (intent.type === 'mute') {
+    audio.setMuted(!audio.isMuted());
+    muteEl.textContent = audio.isMuted() ? 'Sound: off' : 'Sound: on';
+    return;
+  }
+  if (replaying) return; // a replay is watched, not steered
+  if (game.status === 'over') {
+    if (intent.type === 'go' && performance.now() - overAt >= RESTART_GUARD_MS) {
+      newGame();
+      start(game);
+      audio.play('start');
+    }
+    return;
+  }
+  if (intent.type === 'pause') {
+    if (game.status === 'playing') paused = !paused;
+    return;
+  }
+  if (paused) {
+    if (intent.type === 'go') paused = false;
+    return;
+  }
+  if (game.status === 'ready') {
+    start(game);
+    audio.play('start');
+  }
+  if (intent.type === 'turn' && turn(game, intent.dir)) audio.play('turn');
+}
+
+function frame(now) {
+  if (!manualClock && lastFrame !== null && game.status === 'playing' && !paused) {
+    carry += Math.min(now - lastFrame, 250);
+    while (game.status === 'playing' && carry >= tickMs(game)) {
+      carry -= tickMs(game);
+      tick();
+    }
+  } else {
+    carry = 0;
+  }
+  lastFrame = now;
+  ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+  lastDrawn = drawFrame(ctx, {
+    g: game, best, paused, muted: audio.isMuted(), replaying, now, sporeTicks: SPORE_TICKS,
+  });
+  window.requestAnimationFrame(frame);
+}
+
+// Size the canvas to the largest whole fit of the window, sharp on high-density screens.
+function fit() {
+  const bar = document.getElementById('bar').offsetHeight;
+  const k = Math.min(window.innerWidth / VIEW_W, (window.innerHeight - bar) / VIEW_H);
+  const w = Math.max(1, Math.floor(VIEW_W * k));
+  const h = Math.max(1, Math.floor(VIEW_H * k));
+  const density = window.devicePixelRatio || 1;
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
+  canvas.width = Math.round(w * density);
+  canvas.height = Math.round(h * density);
+  pixelScale = canvas.width / VIEW_W;
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const intent = keyIntent(e.key);
+  if (!intent) return;
+  e.preventDefault();
+  if (e.repeat && intent.type !== 'turn') return;
+  act(intent);
+});
+
+// One finger: a move of 24 px or more steers (and can steer again without lifting), a shorter touch is a tap.
+let finger = null;
+const onControl = (e) => e.target === muteEl || e.target === replayEl;
+window.addEventListener('pointerdown', (e) => {
+  if (onControl(e) || finger) return;
+  finger = { id: e.pointerId, x: e.clientX, y: e.clientY, steered: false };
+});
+window.addEventListener('pointermove', (e) => {
+  if (!finger || e.pointerId !== finger.id) return;
+  const dir = swipeDir(e.clientX - finger.x, e.clientY - finger.y);
+  if (!dir) return;
+  finger.x = e.clientX;
+  finger.y = e.clientY;
+  finger.steered = true;
+  act({ type: 'turn', dir });
+});
+window.addEventListener('pointerup', (e) => {
+  if (!finger || e.pointerId !== finger.id) return;
+  if (!finger.steered) act({ type: 'go' });
+  finger = null;
+});
+window.addEventListener('pointercancel', (e) => {
+  if (finger && e.pointerId === finger.id) finger = null;
+});
+
+muteEl.addEventListener('click', () => {
+  act({ type: 'mute' });
+  muteEl.blur();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && game.status === 'playing' && !replaying) paused = true;
+});
+window.addEventListener('resize', fit);
+
+// Read-only view for tests and for the curious. state() is a copy; changing it does not change the game.
+window.__dewgrub = {
+  version: VERSION,
+  state() {
+    const s = snapshot(game);
+    s.paused = paused;
+    s.muted = audio.isMuted();
+    s.replaying = replaying;
+    s.best = best;
+    s.logText = encodeLog(game.log);
+    return s;
+  },
+  drawn() { return lastDrawn.slice(); },
+  sounds() { return { played: audio.played(), context: audio.contextState() }; },
+  // Only with ?clock=manual: advance n ticks, exactly as the real clock would.
+  step(n) {
+    if (!manualClock) throw new Error('step() needs ?clock=manual');
+    for (let i = 0; i < n && game.status === 'playing' && !paused; i++) tick();
+    return this.state();
+  },
+};
+
+newGame();
+fit();
+window.requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>

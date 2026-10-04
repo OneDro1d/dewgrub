@@ -1,0 +1,3 @@
+Every file in this folder names, in its first lines, the commit and the command that produced it.
+check-output.txt: tools/evidence.sh v6-head  (a fresh git clone into a temporary folder, then ./check.sh ).
+Output is unedited, except that folder names of the machine are shown as <checkout>, <python> and <home>.

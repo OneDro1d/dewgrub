@@ -146,7 +146,7 @@ Printed by `tools/numbers.sh` at tag `v6`, except the last four rows, whose sour
 | deliberate page faults, all caught | 36 |
 | versions | 6 (tags `v1` to `v6`) |
 | runtime dependencies | 0 |
-| wall-clock time | The game (v1 to v4): 0.7 hours, 13:29 to 14:13 UTC on 4 Oct 2026. Fit for strangers (v5): about half an hour of work plus about 40 minutes of checks. Service, players and first-steer start (v6): about 40 minutes of work (15:31 to about 16:10 UTC), then the author rewrite and about an hour of checks and evidence runs on fresh clones. The times of the commits are in `git log`. |
+| wall-clock time | The game (v1 to v4): 0.7 hours, 13:29 to 14:13 UTC on 4 Oct 2026. Fit for strangers (v5): about half an hour of work plus about 40 minutes of checks. Service, players and first-steer start (v6): about 40 minutes of work (15:31 to about 16:10 UTC), then the author rewrite and about 35 minutes of checks and evidence runs on fresh clones. The times of the commits are in `git log`. |
 | defects the blind review found | 4 confirmed and fixed, 1 accepted in part; none in the game logic (`evidence/review.md`) |
 | test weaknesses the blind review found | 6: 4 fixed, 1 was a wording fault in a rule, 1 rejected and listed below as not proven |
 | defects the builder's own checks found | 3 by looking at screenshots; by deliberate faults, 2 holes in the unit tests and 1 in the browser tests up to v4 (`evidence/review.md`, last section), and at v6, 2 holes in the service tests (a path that left `dist/` and a service fault were not tested) and 1 in the browser tests (a right click that put the start panel away went unnoticed) |

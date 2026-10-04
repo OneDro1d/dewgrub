@@ -6,7 +6,7 @@ import { keyIntent, swipeDir } from './input.js';
 import { createAudio } from './audio.js';
 import { VIEW_W, VIEW_H, drawFrame } from './render.js';
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const RESTART_GUARD_MS = 350; // a key or tap this soon after dying is ignored, so a late move cannot restart
 
 const params = new URLSearchParams(window.location.search);

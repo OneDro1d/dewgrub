@@ -70,6 +70,80 @@ test('R-L1 different seeds put the first dew in different places', () => {
   }
 });
 
+// Added after tools/mutate.mjs showed that a hash which ignored the score went unnoticed.
+test('R-L1 the state hash changes when any part of the state changes', () => {
+  const base = () => {
+    const g = bare(5);
+    g.spore = { x: 3, y: 3, ttl: 9 };
+    turn(g, 'U');
+    return g;
+  };
+  const h0 = stateHash(base());
+  assert.equal(stateHash(base()), h0);
+  const changes = {
+    score: (g) => { g.score += 10; },
+    tick: (g) => { g.tick += 1; },
+    dir: (g) => { g.dir = 'D'; },
+    queue: (g) => { g.queue = []; },
+    status: (g) => { g.status = 'over'; },
+    cause: (g) => { g.cause = 'wall'; },
+    rng: (g) => { g.rng += 1; },
+    seed: (g) => { g.seed += 1; },
+    dew: (g) => { g.dew = cell(1, 0); },
+    'no dew': (g) => { g.dew = null; },
+    spore: (g) => { g.spore.x = 4; },
+    'spore ttl': (g) => { g.spore.ttl = 8; },
+    'no spore': (g) => { g.spore = null; },
+    grub: (g) => { g.grub[2] = cell(9, 11); },
+    'grub length': (g) => { g.grub.pop(); },
+    dewEaten: (g) => { g.dewEaten += 1; },
+    sporesEaten: (g) => { g.sporesEaten += 1; },
+    cols: (g) => { g.cols += 1; },
+    rows: (g) => { g.rows += 1; },
+  };
+  for (const [name, change] of Object.entries(changes)) {
+    const g = base();
+    change(g);
+    assert.notEqual(stateHash(g), h0, `the hash ignores: ${name}`);
+  }
+});
+
+// Added after tools/mutate.mjs showed that dew landing on the spore went unnoticed.
+test('R-L7 new dew never lands on the spore or the grub, even when one cell is left', () => {
+  for (let seed = 1; seed <= 40; seed++) {
+    const g = bare(seed);
+    g.cols = 3;
+    g.rows = 2;
+    g.grub = [cell(1, 0), cell(0, 0), cell(0, 1)];
+    g.dir = 'R';
+    g.dew = cell(2, 0);
+    g.spore = { x: 2, y: 1, ttl: 30 };
+    step(g);
+    assert.deepEqual(g.dew, cell(1, 1), `seed ${seed}`);
+    assert.equal(g.status, 'playing');
+  }
+});
+
+test('R-L8 a new spore never lands on the dew or the grub, even when one cell is left', () => {
+  for (let seed = 1; seed <= 40; seed++) {
+    const g = bare(seed);
+    g.cols = 3;
+    g.rows = 3;
+    g.grub = [cell(1, 0), cell(0, 0), cell(0, 1), cell(0, 2), cell(1, 2), cell(2, 2)];
+    g.dewEaten = 4;
+    g.score = 40;
+    g.dir = 'R';
+    g.dew = cell(2, 0);
+    const events = step(g);
+    // 9 cells, 7 are grub now. Dew takes one of the two free cells, the spore must take the other.
+    const free = [cell(1, 1), cell(2, 1)];
+    assert.ok(events.includes('spore-appear'), `seed ${seed}`);
+    assert.ok(free.some((c) => c.x === g.dew.x && c.y === g.dew.y), `seed ${seed}: dew`);
+    assert.ok(free.some((c) => c.x === g.spore.x && c.y === g.spore.y), `seed ${seed}: spore`);
+    assert.ok(!(g.dew.x === g.spore.x && g.dew.y === g.spore.y), `seed ${seed}: spore on dew`);
+  }
+});
+
 test('R-L2 a new game has the documented starting state', () => {
   const g = createGame(123);
   assert.equal(g.cols, 20);

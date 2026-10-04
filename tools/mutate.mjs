@@ -31,6 +31,7 @@ const MUTANTS = [
   ['the generator is stuck', 'g.rng = (g.rng + 0x6d2b79f5) >>> 0;', 'g.rng = 1;'],
   ['the grub moves before the game starts', "if (g.status !== 'playing') return events;", "if (g.status === 'over') return events;"],
   ['dew can land on the spore', 'if (g.spore) taken.add(g.spore.y * g.cols + g.spore.x);', ''],
+  ['a spore can land on the dew', 'if (g.dew) taken.add(g.dew.y * g.cols + g.dew.x);', ''],
   ['dew can land on the grub', 'const taken = new Set(g.grub.map((c) => c.y * g.cols + c.x));', 'const taken = new Set();'],
   ['a turn log with ticks going backwards is accepted', '!Number.isSafeInteger(t) || t < prev', '!Number.isSafeInteger(t)'],
   ['a big seed is not wrapped at 2^32', '% 4294967296n', '% 4294967295n'],

@@ -1,0 +1,46 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #0c1511;
+  color: #e8f6d8;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+main {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+canvas {
+  display: block;
+  touch-action: none;
+}
+#bar {
+  box-sizing: border-box;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  /* No font is shipped. These three short labels use whatever monospace font the device has. */
+  font: 14px monospace;
+}
+#mute, #replay {
+  font: inherit;
+  color: #9be564;
+  background: none;
+  border: 1px solid #3f7d46;
+  border-radius: 4px;
+  padding: 6px 10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+[hidden] {
+  display: none !important;
+}

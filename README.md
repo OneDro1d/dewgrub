@@ -89,7 +89,7 @@ Printed by `tools/numbers.sh` at tag `v4`, except the last four rows, whose sour
 | deliberate page faults, all caught | 31 |
 | versions | 4 (tags `v1` to `v4`) |
 | runtime dependencies | 0 |
-| wall-clock time | 0.7 hours: brief opened 13:29 UTC (the builder's own status file, committed 13:30), first commit 13:35, tag `v4` 14:10 UTC on 4 Oct 2026 (`git log`). The clean-checkout check after the tag takes about 8 more minutes. |
+| wall-clock time | 0.7 hours: brief opened 13:29 UTC (the builder's own status file, committed 13:30), first commit 13:35, tag `v4` 14:13 UTC on 4 Oct 2026 (`git log`). The clean-checkout check after the tag takes about 8 more minutes. |
 | defects the blind review found | 4 confirmed and fixed, 1 accepted in part; none in the game logic (`evidence/review.md`) |
 | test weaknesses the blind review found | 6: 4 fixed, 1 was a wording fault in a rule, 1 rejected and listed below as not proven |
 | defects the builder's own checks found | 3 by looking at screenshots, 2 holes in the unit tests and 1 in the browser tests by deliberate faults (`evidence/review.md`, last section) |

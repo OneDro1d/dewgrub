@@ -1,0 +1,6 @@
+From a clean checkout of the commit named in check-output.txt:
+
+    ./check.sh 
+
+tools/evidence.sh v4  did exactly that (git clone into a temporary folder, then ./check.sh) and wrote the
+full output, unedited, to check-output.txt.

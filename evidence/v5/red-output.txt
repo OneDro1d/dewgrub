@@ -1,33 +1,100 @@
+version:      v5
+git ref:      v4 (911a4f6f1d6362d6d6a89d670f6b3a9f0ddf55c3)
+regenerated:  2026-10-04T16:22:21Z by tools/regen-evidence.sh, on a fresh clone of that ref
+node:         v20.20.2
+command:      <python>/bin/python -m unittest discover -s e2e -p test_public.py -v
+expected:     the command should fail
+shown as:     <checkout> = the temporary clone, <python> = the Python install, <home> = the home folder
+----------------------------------------------------------------------
 test_R_B15_the_sub_path_server_really_refuses_the_root (test_public.PublicTests.test_R_B15_the_sub_path_server_really_refuses_the_root) ... ok
 test_R_B15_works_from_a_sub_path (test_public.PublicTests.test_R_B15_works_from_a_sub_path) ... ok
 test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file (test_public.PublicTests.test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file) ... FAIL
-test_R_B16_the_license_is_mit_and_the_readme_says_so (test_public.PublicTests.test_R_B16_the_license_is_mit_and_the_readme_says_so) ... FAIL
+test_R_B16_the_license_is_mit_and_the_readme_says_so (test_public.PublicTests.test_R_B16_the_license_is_mit_and_the_readme_says_so) ... ERROR
+
+======================================================================
+ERROR: test_R_B16_the_license_is_mit_and_the_readme_says_so (test_public.PublicTests.test_R_B16_the_license_is_mit_and_the_readme_says_so)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_public.py", line 105, in test_R_B16_the_license_is_mit_and_the_readme_says_so
+    text = (ROOT / "LICENSE").read_text()
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 788, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 772, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '<checkout>/LICENSE'
 
 ======================================================================
 FAIL: test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file (test_public.PublicTests.test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "<checkout>/e2e/test_public.py", line 101, in test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file
+  File "<checkout>/e2e/test_public.py", line 102, in test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file
     self.assertEqual(hits, [])
     ~~~~~~~~~~~~~~~~^^^^^^^^^^
-AssertionError: Lists differ: ['DECISIONS.md:16: the internal word for t[2575 chars]ame'] != []
+AssertionError: Lists differ: ['DECISIONS.md:16: the internal word for t[2866 chars]ame'] != []
 
-First list contains 46 additional elements.
+First list contains 52 additional elements.
 First extra element 0:
 'DECISIONS.md:16: the internal word for the task'
 
-Diff is 2765 characters long. Set self.maxDiff to None to see it.
-
-======================================================================
-FAIL: test_R_B16_the_license_is_mit_and_the_readme_says_so (test_public.PublicTests.test_R_B16_the_license_is_mit_and_the_readme_says_so)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "<checkout>/e2e/test_public.py", line 107, in test_R_B16_the_license_is_mit_and_the_readme_says_so
-    self.assertTrue("MIT license" in (ROOT / "README.md").read_text(), "the README does not name the MIT license")
-    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: False is not true : the README does not name the MIT license
++ []
+- ['DECISIONS.md:16: the internal word for the task',
+-  'README.md:92: the internal word for the task',
+-  'STACK.md:15: a home folder path',
+-  "STACK.md:21: the operator's name",
+-  'STACK.md:21: an internal workspace word',
+-  'STACK.md:27: an internal workspace word',
+-  'STACK.md:15: an internal machine or store name',
+-  'STACK.md:18: an internal machine or store name',
+-  'STACK.md:27: the internal word for the task',
+-  'STACK.md:28: the internal word for the task',
+-  'check.sh:11: a home folder path',
+-  'check.sh:11: an internal machine or store name',
+-  'docs/REQUIREMENTS.md:52: the internal word for the task',
+-  'evidence/review-probes/b1.py:4: a home folder path',
+-  'evidence/review-probes/b1.py:4: an internal machine or store name',
+-  'evidence/review-probes/b2.py:4: a home folder path',
+-  'evidence/review-probes/b2.py:4: an internal machine or store name',
+-  'evidence/review-probes/p1.mjs:1: a home folder path',
+-  'evidence/review-probes/p1.mjs:1: an internal machine or store name',
+-  'evidence/review.md:5: an internal workspace word',
+-  'evidence/v1/red-output.txt:5: a home folder path',
+-  'evidence/v1/red-output.txt:5: a home folder path',
+-  'evidence/v1/red-output.txt:15: a home folder path',
+-  'evidence/v1/red-output.txt:18: a home folder path',
+-  'evidence/v1/red-output.txt:19: a home folder path',
+-  'evidence/v1/red-output.txt:22: a home folder path',
+-  'evidence/v1/red-output.txt:5: an internal machine or store name',
+-  'evidence/v1/red-output.txt:5: an internal machine or store name',
+-  'evidence/v1/red-output.txt:15: an internal machine or store name',
+-  'evidence/v1/red-output.txt:18: an internal machine or store name',
+-  'evidence/v1/red-output.txt:19: an internal machine or store name',
+-  'evidence/v1/red-output.txt:22: an internal machine or store name',
+-  'evidence/v4/red-output.txt:11: a home folder path',
+-  'evidence/v4/red-output.txt:14: a home folder path',
+-  'evidence/v4/red-output.txt:16: a home folder path',
+-  'evidence/v4/red-output.txt:18: a home folder path',
+-  'evidence/v4/red-output.txt:30: a home folder path',
+-  'evidence/v4/red-output.txt:39: a home folder path',
+-  'evidence/v4/red-output.txt:55: a home folder path',
+-  'evidence/v4/red-output.txt:67: a home folder path',
+-  'evidence/v4/red-output.txt:11: an internal machine or store name',
+-  'evidence/v4/red-output.txt:14: an internal machine or store name',
+-  'evidence/v4/red-output.txt:16: an internal machine or store name',
+-  'evidence/v4/red-output.txt:18: an internal machine or store name',
+-  'evidence/v4/red-output.txt:30: an internal machine or store name',
+-  'evidence/v4/red-output.txt:39: an internal machine or store name',
+-  'evidence/v4/red-output.txt:55: an internal machine or store name',
+-  'evidence/v4/red-output.txt:67: an internal machine or store name',
+-  'tools/mutate-page.mjs:12: a home folder path',
+-  'tools/mutate-page.mjs:12: an internal machine or store name',
+-  'tools/shots.py:4: a home folder path',
+-  'tools/shots.py:4: an internal machine or store name']
 
 ----------------------------------------------------------------------
 Ran 4 tests in 8.008s
 
-FAILED (failures=2)
+FAILED (failures=1, errors=1)
+----------------------------------------------------------------------
+exit code: 1

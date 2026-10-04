@@ -1,197 +1,197 @@
-version:   v5
-date:      2026-10-04T15:11:53Z
-commit:    57a755e62ebf30efdbc243740981eb85d4631c26
-where:     a fresh git clone of that commit, in a temporary folder
-node:      v20.20.2
-command:   ./check.sh 
-shown as:  <checkout> = the temporary clone, <python> = the Python install, <home> = the home folder
+version:      v5
+git ref:      v5 (f53e0b8f93b165b5689ef8a10c104ecd098c78b4)
+regenerated:  2026-10-04T16:17:02Z by tools/regen-evidence.sh, on a fresh clone of that ref
+node:         v20.20.2
+command:      ./check.sh
+expected:     the command should pass
+shown as:     <checkout> = the temporary clone, <python> = the Python install, <home> = the home folder
 ----------------------------------------------------------------------
 == 1/6 unit tests (Node, no browser) ==
 TAP version 13
 # Subtest: R-L1 same seed and same turns give the same hash after every tick
 ok 1 - R-L1 same seed and same turns give the same hash after every tick
   ---
-  duration_ms: 39.637287
+  duration_ms: 40.338555
   ...
 # Subtest: R-L1 a fixed turn log gives the same hashes twice, and a log that differs by one tick diverges there
 ok 2 - R-L1 a fixed turn log gives the same hashes twice, and a log that differs by one tick diverges there
   ---
-  duration_ms: 0.415052
+  duration_ms: 0.428776
   ...
 # Subtest: R-L1 different seeds put the first dew in different places
 ok 3 - R-L1 different seeds put the first dew in different places
   ---
-  duration_ms: 0.34879
+  duration_ms: 0.34925
   ...
 # Subtest: R-L1 the state hash changes when any part of the state changes
 ok 4 - R-L1 the state hash changes when any part of the state changes
   ---
-  duration_ms: 0.60815
+  duration_ms: 0.609657
   ...
 # Subtest: R-L7 new dew never lands on the spore or the grub, even when one cell is left
 ok 5 - R-L7 new dew never lands on the spore or the grub, even when one cell is left
   ---
-  duration_ms: 0.778538
+  duration_ms: 0.789751
   ...
 # Subtest: R-L8 a new spore never lands on the dew or the grub, even when one cell is left
 ok 6 - R-L8 a new spore never lands on the dew or the grub, even when one cell is left
   ---
-  duration_ms: 0.747849
+  duration_ms: 0.744467
   ...
 # Subtest: R-L2 a new game has the documented starting state
 ok 7 - R-L2 a new game has the documented starting state
   ---
-  duration_ms: 0.253135
+  duration_ms: 0.287262
   ...
 # Subtest: R-L3 nothing moves while the game is ready
 ok 8 - R-L3 nothing moves while the game is ready
   ---
-  duration_ms: 0.155139
+  duration_ms: 0.16882
   ...
 # Subtest: R-L3 one step moves the head one cell and keeps the length
 ok 9 - R-L3 one step moves the head one cell and keeps the length
   ---
-  duration_ms: 0.183252
+  duration_ms: 0.337952
   ...
 # Subtest: R-L4 a turn takes effect on the next step
 ok 10 - R-L4 a turn takes effect on the next step
   ---
-  duration_ms: 0.201623
+  duration_ms: 0.206437
   ...
 # Subtest: R-L4 a reversal or a repeat of the current direction is rejected
 ok 11 - R-L4 a reversal or a repeat of the current direction is rejected
   ---
-  duration_ms: 0.139132
+  duration_ms: 0.140052
   ...
 # Subtest: R-L4 two turns can wait, a third is rejected, each is checked against the one before
 ok 12 - R-L4 two turns can wait, a third is rejected, each is checked against the one before
   ---
-  duration_ms: 0.134892
+  duration_ms: 0.134921
   ...
 # Subtest: R-L5 leaving the grid on any side ends the game with cause wall
 ok 13 - R-L5 leaving the grid on any side ends the game with cause wall
   ---
-  duration_ms: 0.412553
+  duration_ms: 0.244211
   ...
 # Subtest: R-L6 running into the body ends the game with cause self
 ok 14 - R-L6 running into the body ends the game with cause self
   ---
-  duration_ms: 0.179142
+  duration_ms: 0.165343
   ...
 # Subtest: R-L6 moving onto the cell the tail leaves is legal
 ok 15 - R-L6 moving onto the cell the tail leaves is legal
   ---
-  duration_ms: 0.140053
+  duration_ms: 0.144489
   ...
 # Subtest: R-L7 eating dew scores 10, grows by one and places new dew on a free cell
 ok 16 - R-L7 eating dew scores 10, grows by one and places new dew on a free cell
   ---
-  duration_ms: 0.188036
+  duration_ms: 0.235816
   ...
 # Subtest: R-L8 a spore appears after the 5th dew, lasts 40 ticks, then is gone
 ok 17 - R-L8 a spore appears after the 5th dew, lasts 40 ticks, then is gone
   ---
-  duration_ms: 0.2639
+  duration_ms: 0.211356
   ...
 # Subtest: R-L8 eating a spore scores 50 and does not grow
 ok 18 - R-L8 eating a spore scores 50 and does not grow
   ---
-  duration_ms: 0.192245
+  duration_ms: 0.189567
   ...
 # Subtest: R-L8 a spore on its last tick can still be eaten
 ok 19 - R-L8 a spore on its last tick can still be eaten
   ---
-  duration_ms: 0.125634
+  duration_ms: 0.121773
   ...
 # Subtest: R-L8 no second spore appears while one exists
 ok 20 - R-L8 no second spore appears while one exists
   ---
-  duration_ms: 0.196046
+  duration_ms: 0.187477
   ...
 # Subtest: R-L9 tick length starts at 150 ms, drops 8 ms per 3 dew, floor 70 ms
 ok 21 - R-L9 tick length starts at 150 ms, drops 8 ms per 3 dew, floor 70 ms
   ---
-  duration_ms: 0.122841
+  duration_ms: 0.118247
   ...
 # Subtest: R-L10 after game over, step and turn change nothing
 ok 22 - R-L10 after game over, step and turn change nothing
   ---
-  duration_ms: 0.111275
+  duration_ms: 0.110573
   ...
 # Subtest: R-L11 filling the grid ends the game with cause full
 ok 23 - R-L11 filling the grid ends the game with cause full
   ---
-  duration_ms: 0.102227
+  duration_ms: 0.104742
   ...
 # Subtest: R-L12 accepted turns are logged with their tick, rejected ones are not
 ok 24 - R-L12 accepted turns are logged with their tick, rejected ones are not
   ---
-  duration_ms: 0.100765
+  duration_ms: 0.096627
   ...
 # Subtest: R-L12 replay of seed and turn log reproduces the final state
 ok 25 - R-L12 replay of seed and turn log reproduces the final state
   ---
-  duration_ms: 32.073499
+  duration_ms: 32.107771
   ...
 # Subtest: R-L12 the turn log encodes to a URL-safe string and back
 ok 26 - R-L12 the turn log encodes to a URL-safe string and back
   ---
-  duration_ms: 19.61387
+  duration_ms: 19.859694
   ...
 # Subtest: R-L12 a malformed turn log is rejected
 ok 27 - R-L12 a malformed turn log is rejected
   ---
-  duration_ms: 0.282642
+  duration_ms: 0.283344
   ...
 # Subtest: R-L13 seed parsing
 ok 28 - R-L13 seed parsing
   ---
-  duration_ms: 0.168631
+  duration_ms: 0.167136
   ...
 # Subtest: R-L14 invariants hold on every tick of 100 games by the scripted player
 ok 29 - R-L14 invariants hold on every tick of 100 games by the scripted player
   ---
-  duration_ms: 2208.926113
+  duration_ms: 2282.106978
   ...
 # Subtest: R-L14 invariants hold on every tick of 100 games with random input
 ok 30 - R-L14 invariants hold on every tick of 100 games with random input
   ---
-  duration_ms: 6.163959
+  duration_ms: 6.43711
   ...
 # Subtest: R-L15 step reports what happened and snapshot is a copy
 ok 31 - R-L15 step reports what happened and snapshot is a copy
   ---
-  duration_ms: 0.164347
+  duration_ms: 0.197512
   ...
 # Subtest: R-P1 every glyph is 5 high, 3 wide (M and W: 5 wide), and no two glyphs are the same
 ok 32 - R-P1 every glyph is 5 high, 3 wide (M and W: 5 wide), and no two glyphs are the same
   ---
-  duration_ms: 1.758369
+  duration_ms: 1.408775
   ...
 # Subtest: R-P1 every character of every game text, and every digit, has a glyph
 ok 33 - R-P1 every character of every game text, and every digit, has a glyph
   ---
-  duration_ms: 0.284325
+  duration_ms: 0.251027
   ...
 # Subtest: R-P1 text layout: width and lit cells
 ok 34 - R-P1 text layout: width and lit cells
   ---
-  duration_ms: 0.833233
+  duration_ms: 0.792197
   ...
 # Subtest: R-P2 every game event has a sound recipe inside the limits
 ok 35 - R-P2 every game event has a sound recipe inside the limits
   ---
-  duration_ms: 0.308412
+  duration_ms: 0.285668
   ...
 # Subtest: R-P3 key mapping
 ok 36 - R-P3 key mapping
   ---
-  duration_ms: 0.339406
+  duration_ms: 0.351503
   ...
 # Subtest: R-P3 swipe mapping
 ok 37 - R-P3 swipe mapping
   ---
-  duration_ms: 0.143065
+  duration_ms: 0.147014
   ...
 1..37
 # tests 37
@@ -201,7 +201,7 @@ ok 37 - R-P3 swipe mapping
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 2374.935563
+# duration_ms 2458.417945
 == 2/6 deliberate logic faults: break the logic, the unit tests must notice each time ==
 caught    a reversal is accepted  <- R-L4 R-L12 R-L14
 caught    a repeat of the direction is accepted  <- R-L4 R-L12
@@ -263,7 +263,7 @@ test_R_B13_only_the_left_mouse_button_plays (test_review.ReviewTests.test_R_B13_
 test_R_B14_the_board_label_tells_the_game_status (test_review.ReviewTests.test_R_B14_the_board_label_tells_the_game_status) ... ok
 
 ----------------------------------------------------------------------
-Ran 26 tests in 40.827s
+Ran 26 tests in 41.882s
 
 OK
 == 5/6 deliberate page faults: break the page, the named browser test must fail each time ==

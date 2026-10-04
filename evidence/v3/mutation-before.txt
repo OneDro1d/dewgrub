@@ -1,6 +1,6 @@
 version:      v3
-git ref:      v3~1 (5764c3f8e53b1838f0dc2507e079d84a25ebcbcb)
-regenerated:  2026-10-04T14:56:00Z by tools/regen-evidence.sh, on a fresh clone of that ref
+git ref:      v3~1 (feb4f42c7bbca62819c5e44097d213055511aed2)
+regenerated:  2026-10-04T16:08:54Z by tools/regen-evidence.sh, on a fresh clone of that ref
 node:         v20.20.2
 command:      node tools/mutate.mjs
 expected:     the command should fail

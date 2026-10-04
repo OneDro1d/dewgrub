@@ -1,6 +1,6 @@
 version:      v1
-git ref:      e0ed818bff4212e7d27d65f13a1ebcdeb10a28d9 (e0ed818bff4212e7d27d65f13a1ebcdeb10a28d9)
-regenerated:  2026-10-04T14:55:47Z by tools/regen-evidence.sh, on a fresh clone of that ref
+git ref:      d16705ec64b7c425db2507b3424408705da8b89d (d16705ec64b7c425db2507b3424408705da8b89d)
+regenerated:  2026-10-04T16:08:41Z by tools/regen-evidence.sh, on a fresh clone of that ref
 node:         v20.20.2
 command:      node --test test/
 expected:     the command should fail
@@ -26,7 +26,7 @@ TAP version 13
 # Subtest: <checkout>/test/logic.test.mjs
 not ok 1 - <checkout>/test/logic.test.mjs
   ---
-  duration_ms: 39.543377
+  duration_ms: 49.850974
   location: '<checkout>/test/logic.test.mjs:1:1'
   failureType: 'testCodeFailure'
   exitCode: 1
@@ -42,6 +42,6 @@ not ok 1 - <checkout>/test/logic.test.mjs
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 43.718209
+# duration_ms 54.138535
 ----------------------------------------------------------------------
 exit code: 1

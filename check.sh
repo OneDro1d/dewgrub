@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The one command that re-runs every check. Exit code 0 means all green.
-#   ./check.sh           everything, about 8 minutes
-#   ./check.sh --quick   skips step 5 (the deliberately broken pages), about 2 minutes
+#   ./check.sh           everything, about 9 minutes
+#   ./check.sh --quick   skips step 5 (the deliberately broken pages), about 5 minutes
 # Needs: Node 20+, git, and a Python with Playwright (pip install playwright; playwright install chromium).
 #   DEWGRUB_PYTHON    the Python to use      (default: python3)
 #   DEWGRUB_CHROMIUM  the browser executable (default: the Chromium that "playwright install chromium" put in place)

@@ -1,6 +1,6 @@
 version:      v4
-git ref:      v4 (4722162148756b3d850414b1fa29c1f42d2ce030)
-regenerated:  2026-10-04T14:58:16Z by tools/regen-evidence.sh, on a fresh clone of that ref
+git ref:      v4 (911a4f6f1d6362d6d6a89d670f6b3a9f0ddf55c3)
+regenerated:  2026-10-04T16:11:18Z by tools/regen-evidence.sh, on a fresh clone of that ref
 node:         v20.20.2
 command:      env DEWGRUB_DIST=<checkout>/dist <python>/bin/python -m unittest discover -s e2e -k test_R_B13 -k test_R_B14 -k test_R_B9 -v
 expected:     the command should fail
@@ -78,7 +78,7 @@ Traceback (most recent call last):
 AssertionError: 'Press Space or tap to start' not found in 'Dewgrub game board'
 
 ----------------------------------------------------------------------
-Ran 5 tests in 32.530s
+Ran 5 tests in 32.525s
 
 FAILED (failures=4, errors=1)
 ----------------------------------------------------------------------

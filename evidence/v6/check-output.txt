@@ -1,0 +1,617 @@
+version:   v6
+date:      2026-10-04T16:08:39Z
+commit:    ae75193326df91082ba6b137b617fef70de48212
+where:     a fresh git clone of that commit, in a temporary folder
+node:      v20.20.2
+command:   ./check.sh 
+shown as:  <checkout> = the temporary clone, <python> = the Python install, <home> = the home folder
+----------------------------------------------------------------------
+== 1/6 unit tests (Node, no browser): game logic, presentation, the local service, the players ==
+TAP version 13
+# Subtest: R-J1 a move is relative to the heading: left, straight, right
+ok 1 - R-J1 a move is relative to the heading: left, straight, right
+  ---
+  duration_ms: 3.777534
+  ...
+# Subtest: R-J1 the view sent to a player describes the board and what each move runs into
+ok 2 - R-J1 the view sent to a player describes the board and what each move runs into
+  ---
+  duration_ms: 0.773057
+  ...
+# Subtest: R-J2 playGame plays a seeded game with any decider and its turn log replays to the same state
+ok 3 - R-J2 playGame plays a seeded game with any decider and its turn log replays to the same state
+  ---
+  duration_ms: 33.244716
+  ...
+# Subtest: R-J2 the random player is seeded, and the scripted player outscores it over 30 seeds
+ok 4 - R-J2 the random player is seeded, and the scripted player outscores it over 30 seeds
+  ---
+  duration_ms: 206.374
+  ...
+# Subtest: R-J2 the tick cap stops a game that is still alive and says so
+ok 5 - R-J2 the tick cap stops a game that is still alive and says so
+  ---
+  duration_ms: 0.789416
+  ...
+# Subtest: R-J3 one decision is one POST with the key as a bearer token, the state and one choice question
+ok 6 - R-J3 one decision is one POST with the key as a bearer token, the state and one choice question
+  ---
+  duration_ms: 38.388023
+  ...
+# Subtest: R-J3 the transport is one function and reports status, body and time without judging them
+ok 7 - R-J3 the transport is one function and reports status, body and time without judging them
+  ---
+  duration_ms: 5.770291
+  ...
+# Subtest: R-J4 429 and 529 are retried with a growing wait, at most 3 times, and every attempt counts in the budget
+ok 8 - R-J4 429 and 529 are retried with a growing wait, at most 3 times, and every attempt counts in the budget
+  ---
+  duration_ms: 13.852756
+  ...
+# Subtest: R-J4 a 401, a 422 and a malformed answer stop the run at once, without a retry
+ok 9 - R-J4 a 401, a 422 and a malformed answer stop the run at once, without a retry
+  ---
+  duration_ms: 10.918566
+  ...
+# Subtest: R-J4 an answer slower than the time limit stops the run with a timeout, a slow one inside the limit is used
+ok 10 - R-J4 an answer slower than the time limit stops the run with a timeout, a slow one inside the limit is used
+  ---
+  duration_ms: 253.993521
+  ...
+# Subtest: R-J5 the budget: a game stops when its calls are spent and says so
+ok 11 - R-J5 the budget: a game stops when its calls are spent and says so
+  ---
+  duration_ms: 8.050957
+  ...
+# Subtest: R-J6 without a key the Jev player exits with code 2 and a clear message, and calls nobody
+ok 12 - R-J6 without a key the Jev player exits with code 2 and a clear message, and calls nobody
+  ---
+  duration_ms: 67.241407
+  ...
+# Subtest: R-J6 the key is never printed and never written, whatever happens
+ok 13 - R-J6 the key is never printed and never written, whatever happens
+  ---
+  duration_ms: 569.539352
+  ...
+# Subtest: R-J7 a whole game against the fake model: the run record and the replay address
+ok 14 - R-J7 a whole game against the fake model: the run record and the replay address
+  ---
+  duration_ms: 128.554178
+  ...
+# Subtest: R-J7 a game the fake model loses ends with the cause, and exit code 0
+ok 15 - R-J7 a game the fake model loses ends with the cause, and exit code 0
+  ---
+  duration_ms: 130.666815
+  ...
+# Subtest: R-J8 the benchmark runs the random and the scripted player without any key, and says Jev was not run
+ok 16 - R-J8 the benchmark runs the random and the scripted player without any key, and says Jev was not run
+  ---
+  duration_ms: 356.48157
+  ...
+# Subtest: R-J8 the benchmark table: mean, median and how the games ended, from known games
+ok 17 - R-J8 the benchmark table: mean, median and how the games ended, from known games
+  ---
+  duration_ms: 0.566016
+  ...
+# Subtest: R-J8 with a key the benchmark adds Jev, on the same seeds, inside a total budget
+ok 18 - R-J8 with a key the benchmark adds Jev, on the same seeds, inside a total budget
+  ---
+  duration_ms: 142.21107
+  ...
+# Subtest: R-L1 same seed and same turns give the same hash after every tick
+ok 19 - R-L1 same seed and same turns give the same hash after every tick
+  ---
+  duration_ms: 40.86503
+  ...
+# Subtest: R-L1 a fixed turn log gives the same hashes twice, and a log that differs by one tick diverges there
+ok 20 - R-L1 a fixed turn log gives the same hashes twice, and a log that differs by one tick diverges there
+  ---
+  duration_ms: 0.408806
+  ...
+# Subtest: R-L1 different seeds put the first dew in different places
+ok 21 - R-L1 different seeds put the first dew in different places
+  ---
+  duration_ms: 0.356724
+  ...
+# Subtest: R-L1 the state hash changes when any part of the state changes
+ok 22 - R-L1 the state hash changes when any part of the state changes
+  ---
+  duration_ms: 0.593172
+  ...
+# Subtest: R-L7 new dew never lands on the spore or the grub, even when one cell is left
+ok 23 - R-L7 new dew never lands on the spore or the grub, even when one cell is left
+  ---
+  duration_ms: 0.77415
+  ...
+# Subtest: R-L8 a new spore never lands on the dew or the grub, even when one cell is left
+ok 24 - R-L8 a new spore never lands on the dew or the grub, even when one cell is left
+  ---
+  duration_ms: 0.742326
+  ...
+# Subtest: R-L2 a new game has the documented starting state
+ok 25 - R-L2 a new game has the documented starting state
+  ---
+  duration_ms: 0.256659
+  ...
+# Subtest: R-L3 nothing moves while the game is ready
+ok 26 - R-L3 nothing moves while the game is ready
+  ---
+  duration_ms: 0.135859
+  ...
+# Subtest: R-L3 one step moves the head one cell and keeps the length
+ok 27 - R-L3 one step moves the head one cell and keeps the length
+  ---
+  duration_ms: 0.186449
+  ...
+# Subtest: R-L4 a turn takes effect on the next step
+ok 28 - R-L4 a turn takes effect on the next step
+  ---
+  duration_ms: 0.427046
+  ...
+# Subtest: R-L4 a reversal or a repeat of the current direction is rejected
+ok 29 - R-L4 a reversal or a repeat of the current direction is rejected
+  ---
+  duration_ms: 0.14284
+  ...
+# Subtest: R-L4 two turns can wait, a third is rejected, each is checked against the one before
+ok 30 - R-L4 two turns can wait, a third is rejected, each is checked against the one before
+  ---
+  duration_ms: 0.135159
+  ...
+# Subtest: R-L5 leaving the grid on any side ends the game with cause wall
+ok 31 - R-L5 leaving the grid on any side ends the game with cause wall
+  ---
+  duration_ms: 0.249529
+  ...
+# Subtest: R-L6 running into the body ends the game with cause self
+ok 32 - R-L6 running into the body ends the game with cause self
+  ---
+  duration_ms: 0.165965
+  ...
+# Subtest: R-L6 moving onto the cell the tail leaves is legal
+ok 33 - R-L6 moving onto the cell the tail leaves is legal
+  ---
+  duration_ms: 0.134145
+  ...
+# Subtest: R-L7 eating dew scores 10, grows by one and places new dew on a free cell
+ok 34 - R-L7 eating dew scores 10, grows by one and places new dew on a free cell
+  ---
+  duration_ms: 0.186108
+  ...
+# Subtest: R-L8 a spore appears after the 5th dew, lasts 40 ticks, then is gone
+ok 35 - R-L8 a spore appears after the 5th dew, lasts 40 ticks, then is gone
+  ---
+  duration_ms: 0.283413
+  ...
+# Subtest: R-L8 eating a spore scores 50 and does not grow
+ok 36 - R-L8 eating a spore scores 50 and does not grow
+  ---
+  duration_ms: 0.197283
+  ...
+# Subtest: R-L8 a spore on its last tick can still be eaten
+ok 37 - R-L8 a spore on its last tick can still be eaten
+  ---
+  duration_ms: 0.121708
+  ...
+# Subtest: R-L8 no second spore appears while one exists
+ok 38 - R-L8 no second spore appears while one exists
+  ---
+  duration_ms: 0.190858
+  ...
+# Subtest: R-L9 tick length starts at 150 ms, drops 8 ms per 3 dew, floor 70 ms
+ok 39 - R-L9 tick length starts at 150 ms, drops 8 ms per 3 dew, floor 70 ms
+  ---
+  duration_ms: 0.118297
+  ...
+# Subtest: R-L10 after game over, step and turn change nothing
+ok 40 - R-L10 after game over, step and turn change nothing
+  ---
+  duration_ms: 0.109278
+  ...
+# Subtest: R-L11 filling the grid ends the game with cause full
+ok 41 - R-L11 filling the grid ends the game with cause full
+  ---
+  duration_ms: 0.109512
+  ...
+# Subtest: R-L12 accepted turns are logged with their tick, rejected ones are not
+ok 42 - R-L12 accepted turns are logged with their tick, rejected ones are not
+  ---
+  duration_ms: 0.095227
+  ...
+# Subtest: R-L12 replay of seed and turn log reproduces the final state
+ok 43 - R-L12 replay of seed and turn log reproduces the final state
+  ---
+  duration_ms: 41.636016
+  ...
+# Subtest: R-L12 the turn log encodes to a URL-safe string and back
+ok 44 - R-L12 the turn log encodes to a URL-safe string and back
+  ---
+  duration_ms: 25.227213
+  ...
+# Subtest: R-L12 a malformed turn log is rejected
+ok 45 - R-L12 a malformed turn log is rejected
+  ---
+  duration_ms: 0.273086
+  ...
+# Subtest: R-L13 seed parsing
+ok 46 - R-L13 seed parsing
+  ---
+  duration_ms: 0.161476
+  ...
+# Subtest: R-L14 invariants hold on every tick of 100 games by the scripted player
+ok 47 - R-L14 invariants hold on every tick of 100 games by the scripted player
+  ---
+  duration_ms: 2218.172959
+  ...
+# Subtest: R-L14 invariants hold on every tick of 100 games with random input
+ok 48 - R-L14 invariants hold on every tick of 100 games with random input
+  ---
+  duration_ms: 6.136428
+  ...
+# Subtest: R-L15 step reports what happened and snapshot is a copy
+ok 49 - R-L15 step reports what happened and snapshot is a copy
+  ---
+  duration_ms: 0.152605
+  ...
+# Subtest: R-P1 every glyph is 5 high, 3 wide (M and W: 5 wide), and no two glyphs are the same
+ok 50 - R-P1 every glyph is 5 high, 3 wide (M and W: 5 wide), and no two glyphs are the same
+  ---
+  duration_ms: 1.67637
+  ...
+# Subtest: R-P1 every character of every game text, and every digit, has a glyph
+ok 51 - R-P1 every character of every game text, and every digit, has a glyph
+  ---
+  duration_ms: 0.410394
+  ...
+# Subtest: R-P1 text layout: width and lit cells
+ok 52 - R-P1 text layout: width and lit cells
+  ---
+  duration_ms: 0.884447
+  ...
+# Subtest: R-P2 every game event has a sound recipe inside the limits
+ok 53 - R-P2 every game event has a sound recipe inside the limits
+  ---
+  duration_ms: 0.299552
+  ...
+# Subtest: R-P3 key mapping
+ok 54 - R-P3 key mapping
+  ---
+  duration_ms: 0.339243
+  ...
+# Subtest: R-P3 swipe mapping
+ok 55 - R-P3 swipe mapping
+  ---
+  duration_ms: 0.14335
+  ...
+# Subtest: R-S1 the service imports the game logic the page is built from, and holds no copy of the rules
+ok 56 - R-S1 the service imports the game logic the page is built from, and holds no copy of the rules
+  ---
+  duration_ms: 2.80548
+  ...
+# Subtest: R-S1 for 40 seeded games the service ends in the same state as the logic
+ok 57 - R-S1 for 40 seeded games the service ends in the same state as the logic
+  ---
+  duration_ms: 325.646742
+  ...
+# Subtest: R-S2 replay answers with exactly the documented fields
+ok 58 - R-S2 replay answers with exactly the documented fields
+  ---
+  duration_ms: 1.610215
+  ...
+# Subtest: R-S2 replay runs the log to its end and says when the game is still running
+ok 59 - R-S2 replay runs the log to its end and says when the game is still running
+  ---
+  duration_ms: 1.818647
+  ...
+# Subtest: R-S2 replay stops at game over when the log runs into it
+ok 60 - R-S2 replay stops at game over when the log runs into it
+  ---
+  duration_ms: 1.136649
+  ...
+# Subtest: R-S2 replay with finish:true goes on straight to game over, as the page replay does
+ok 61 - R-S2 replay with finish:true goes on straight to game over, as the page replay does
+  ---
+  duration_ms: 6.586402
+  ...
+# Subtest: R-S3 step answers after exactly n ticks, with the state a player needs
+ok 62 - R-S3 step answers after exactly n ticks, with the state a player needs
+  ---
+  duration_ms: 2.13936
+  ...
+# Subtest: R-S3 step does not apply turns logged at tick n or later
+ok 63 - R-S3 step does not apply turns logged at tick n or later
+  ---
+  duration_ms: 2.633655
+  ...
+# Subtest: R-S3 step stops at game over and reports the tick it happened on
+ok 64 - R-S3 step stops at game over and reports the tick it happened on
+  ---
+  duration_ms: 1.13794
+  ...
+# Subtest: R-S3 step shows the spore with its ticks left
+ok 65 - R-S3 step shows the spore with its ticks left
+  ---
+  duration_ms: 1.701134
+  ...
+# Subtest: R-S4 every malformed request gets 400 with its error code and a message
+ok 66 - R-S4 every malformed request gets 400 with its error code and a message
+  ---
+  duration_ms: 20.664554
+  ...
+# Subtest: R-S4 a fault inside the service answers 500 internal_error, leaks nothing, and the service keeps serving
+ok 67 - R-S4 a fault inside the service answers 500 internal_error, leaks nothing, and the service keeps serving
+  ---
+  duration_ms: 2.600435
+  ...
+# Subtest: R-S4 the limits: the largest allowed ticks and body are accepted
+ok 68 - R-S4 the limits: the largest allowed ticks and body are accepted
+  ---
+  duration_ms: 1.937061
+  ...
+# Subtest: R-S4 a malformed request changes nothing: the same good request answers the same before and after
+ok 69 - R-S4 a malformed request changes nothing: the same good request answers the same before and after
+  ---
+  duration_ms: 4.123271
+  ...
+# Subtest: R-S5 unknown paths get 404 and wrong methods get 405, both as JSON errors
+ok 70 - R-S5 unknown paths get 404 and wrong methods get 405, both as JSON errors
+  ---
+  duration_ms: 16.157234
+  ...
+# Subtest: R-S6 the caller's X-Request-Id comes back, and an invalid or missing one is replaced
+ok 71 - R-S6 the caller's X-Request-Id comes back, and an invalid or missing one is replaced
+  ---
+  duration_ms: 9.116666
+  ...
+# Subtest: R-S6 one JSON log line per request, with the id, the path, the status and the duration
+ok 72 - R-S6 one JSON log line per request, with the id, the path, the status and the duration
+  ---
+  duration_ms: 2.643633
+  ...
+# Subtest: R-S7 stateless: the same request gives the same body, alone, repeated and among 60 concurrent others
+ok 73 - R-S7 stateless: the same request gives the same body, alone, repeated and among 60 concurrent others
+  ---
+  duration_ms: 74.412881
+  ...
+# Subtest: R-S8 the page is served at / exactly as built, and nothing outside dist/ is served
+ok 74 - R-S8 the page is served at / exactly as built, and nothing outside dist/ is served
+  ---
+  duration_ms: 3.843183
+  ...
+# Subtest: R-S8 started as a program it listens on 127.0.0.1 and the port from PORT, logs to stdout and stops on SIGTERM
+ok 75 - R-S8 started as a program it listens on 127.0.0.1 and the port from PORT, logs to stdout and stops on SIGTERM
+  ---
+  duration_ms: 43.622631
+  ...
+# Subtest: R-S9 docs/API.md names every error code, both limits, and a curl example for each endpoint
+ok 76 - R-S9 docs/API.md names every error code, both limits, and a curl example for each endpoint
+  ---
+  duration_ms: 0.312405
+  ...
+1..76
+# tests 76
+# suites 0
+# pass 76
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2402.181372
+== 2/6 deliberate faults in the logic, the service and the players: the unit tests must notice each time ==
+caught    [game logic] a reversal is accepted  <- R-L4 R-L12 R-L14
+caught    [game logic] a repeat of the direction is accepted  <- R-L4 R-L12
+caught    [game logic] three turns can wait  <- R-L4
+caught    [game logic] a turn is checked against the current direction only  <- R-L4
+caught    [game logic] the right wall is one cell too far  <- R-L5 R-L10 R-L14
+caught    [game logic] the top wall is missing  <- R-L5 R-L14
+caught    [game logic] the tail cell counts as body  <- R-L6 R-L8
+caught    [game logic] the body never kills  <- R-L6 R-L14
+caught    [game logic] the grub never grows  <- R-L7 R-L8 R-L11 R-L14
+caught    [game logic] dew scores 11  <- R-L7 R-L11 R-L14 R-L15
+caught    [game logic] a spore lives one tick longer  <- R-L8
+caught    [game logic] a spore on its last tick cannot be eaten  <- R-L8
+caught    [game logic] a second spore replaces the first  <- R-L8
+caught    [game logic] a spore comes after every 4th dew  <- R-L8
+caught    [game logic] the speed floor is 60 ms  <- R-L9
+caught    [game logic] turns are not logged  <- R-L12
+caught    [game logic] rejected turns are logged  <- R-L12
+caught    [game logic] the generator is stuck  <- R-L1
+caught    [game logic] the grub moves before the game starts  <- R-L3
+caught    [game logic] dew can land on the spore  <- R-L7
+caught    [game logic] a spore can land on the dew  <- R-L8
+caught    [game logic] dew can land on the grub  <- R-L7 R-L8 R-L11 R-L14
+caught    [game logic] a turn log with ticks going backwards is accepted  <- R-L12
+caught    [game logic] a big seed is not wrapped at 2^32  <- R-L13
+caught    [game logic] the state hash ignores the score  <- R-L1
+caught    [game logic] a full grid is not noticed  <- R-L11
+caught    [game logic] step reports no eat event  <- R-L7 R-L11 R-L15
+caught    [game logic] snapshot is not a copy  <- R-L15
+caught    [service] step plays one tick too many  <- R-S1 R-S2 R-S3
+caught    [service] replay stops on the last turn, not one tick after it  <- R-S2 R-S8
+caught    [service] finish is ignored  <- R-S2 R-S8
+caught    [service] a seed in a string is accepted  <- R-S4
+caught    [service] a seed above 2^32 - 1 is accepted  <- R-S4
+caught    [service] negative ticks are accepted  <- R-S4
+caught    [service] there is no limit on ticks  <- R-S4
+caught    [service] a turn log the logic rejects is played as an empty log  <- R-S4
+caught    [service] a missing field is taken as zero  <- R-S4 R-S6
+caught    [service] a JSON array is accepted as a body  <- R-S4
+caught    [service] the body size limit is not enforced  <- R-S4
+caught    [service] a wrong finish value is accepted  <- R-S4
+caught    [service] the caller's request id is not sent back  <- R-S4 R-S6
+caught    [service] any text is accepted as a request id  <- R-S6
+caught    [service] GET on an API path is not refused  <- R-S5
+caught    [service] POST on the page is not refused  <- R-S5
+caught    [service] the log line carries the query string  <- R-S6
+caught    [service] the log line has no duration  <- R-S6
+caught    [service] the spore's ticks left are not reported  <- R-S3
+caught    [service] score reports the dew count  <- R-S1 R-S2 R-S8
+caught    [service] step leaves out the state  <- R-S3 R-S7
+caught    [service] files outside dist/ can be read  <- R-S5
+caught    [service] the service remembers the last game  <- R-S1 R-S2 R-S3
+caught    [service] a service fault takes the whole service down  <- run failed
+caught    [Jev player] a 429 is not retried  <- R-J4 R-J5 R-J6
+caught    [Jev player] a 529 is not retried  <- R-J4
+caught    [Jev player] four retries instead of three  <- R-J4
+caught    [Jev player] retries are not counted in the budget  <- R-J4 R-J5
+caught    [Jev player] the wait between retries does not grow  <- R-J4
+caught    [Jev player] a 401 is not recognised  <- R-J4 R-J6
+caught    [Jev player] a choice outside the three moves is accepted  <- R-J4
+caught    [Jev player] a timeout is reported as something else  <- R-J4
+caught    [Jev player] the response time is not recorded  <- R-J4
+caught    [Jev player] the budget does not stop anything  <- R-J5 R-J7 R-J8
+caught    [Jev player] a game budget does not spend from the total budget  <- R-J8
+caught    [Jev player] the key is written to the run record  <- R-J6
+caught    [Jev player] the key is printed  <- R-J6
+caught    [Jev player] the player runs without a key  <- R-J6
+caught    [Jev player] the record leaves out the replay address  <- R-J7
+caught    [Jev player] a failed run exits with code 0  <- R-J6
+caught    [Jev player] the default budget is 3000 calls  <- R-J5
+caught    [Jev transport] the key is sent without the Bearer scheme  <- R-J3 R-J6
+caught    [Jev transport] the question is left out of the request  <- R-J3
+caught    [Jev transport] there is no time limit on a request  <- R-J4
+caught    [Jev transport] the request goes out as a GET  <- R-J3
+caught    [players] left and right are swapped  <- R-J1 R-J2 R-J7 R-J8
+caught    [players] the view calls a wall nothing  <- R-J1
+caught    [players] the view calls the body nothing  <- R-J1
+caught    [players] the tick cap is ignored  <- R-J2
+caught    [players] an error of the model crashes the run instead of ending it  <- R-J6
+caught    [players] the random player ignores its seed  <- R-J2 R-J8
+caught    [benchmark] Jev is played without a key  <- R-J8
+caught    [benchmark] the median is the mean  <- R-J8
+caught    [benchmark] a capped game is counted as a death  <- R-J8
+caught    [benchmark] the total budget is not checked between games  <- R-J8
+caught    [benchmark] Jev gets its own seeds  <- R-J8
+84/84 deliberate faults were caught by the unit tests
+== 3/6 the committed dist/index.html is what the source builds to ==
+dist/index.html is up to date with src/ (28837 bytes)
+== 4/6 browser tests (headless Chromium against dist/index.html) ==
+test_R_B10_works_opened_from_disk (test_page.PageTests.test_R_B10_works_opened_from_disk) ... ok
+test_R_B1_loads_clean_and_draws (test_page.PageTests.test_R_B1_loads_clean_and_draws) ... ok
+test_R_B2_a_steer_starts_the_game_without_space_first (test_page.PageTests.test_R_B2_a_steer_starts_the_game_without_space_first) ... ok
+test_R_B2_arrow_keys_do_not_restart_a_finished_game (test_page.PageTests.test_R_B2_arrow_keys_do_not_restart_a_finished_game) ... ok
+test_R_B2_keyboard_plays_from_ready_to_over_and_restarts (test_page.PageTests.test_R_B2_keyboard_plays_from_ready_to_over_and_restarts) ... ok
+test_R_B4_score_on_the_page_is_the_logic_score (test_page.PageTests.test_R_B4_score_on_the_page_is_the_logic_score) ... ok
+test_R_B5_same_seed_and_same_keys_give_the_same_run (test_page.PageTests.test_R_B5_same_seed_and_same_keys_give_the_same_run) ... ok
+test_R_B5_without_a_seed_each_game_gets_its_own_seed (test_page.PageTests.test_R_B5_without_a_seed_each_game_gets_its_own_seed) ... ok
+test_R_B7_no_network (test_page.PageTests.test_R_B7_no_network) ... ok
+test_R_B7_the_browser_blocks_a_request_if_one_is_tried (test_page.PageTests.test_R_B7_the_browser_blocks_a_request_if_one_is_tried) ... ok
+test_R_B11_pause_stops_the_clock_and_a_hidden_tab_pauses (test_play.PlayTests.test_R_B11_pause_stops_the_clock_and_a_hidden_tab_pauses) ... ok
+test_R_B12_originality_rules_a_machine_can_check (test_play.PlayTests.test_R_B12_originality_rules_a_machine_can_check) ... ok
+test_R_B3_one_long_swipe_can_steer_twice (test_play.PlayTests.test_R_B3_one_long_swipe_can_steer_twice) ... ok
+test_R_B3_touch_plays_a_whole_real_time_game (test_play.PlayTests.test_R_B3_touch_plays_a_whole_real_time_game) ... ok
+test_R_B3_touch_tap_starts_swipes_steer_tap_restarts (test_play.PlayTests.test_R_B3_touch_tap_starts_swipes_steer_tap_restarts) ... ok
+test_R_B6_a_broken_replay_link_falls_back_to_a_normal_game (test_play.PlayTests.test_R_B6_a_broken_replay_link_falls_back_to_a_normal_game) ... ok
+test_R_B6_real_time_run_replays_to_the_same_result (test_play.PlayTests.test_R_B6_real_time_run_replays_to_the_same_result) ... ok
+test_R_B8_sound_is_scheduled_on_eat_and_not_when_muted (test_play.PlayTests.test_R_B8_sound_is_scheduled_on_eat_and_not_when_muted) ... ok
+test_R_B9_fits_phone_viewports_without_scrolling (test_play.PlayTests.test_R_B9_fits_phone_viewports_without_scrolling) ... ok
+test_R_B15_the_sub_path_server_really_refuses_the_root (test_public.PublicTests.test_R_B15_the_sub_path_server_really_refuses_the_root) ... ok
+test_R_B15_works_from_a_sub_path (test_public.PublicTests.test_R_B15_works_from_a_sub_path) ... ok
+test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file (test_public.PublicTests.test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file) ... ok
+test_R_B16_no_personal_name_or_address_in_the_git_history (test_public.PublicTests.test_R_B16_no_personal_name_or_address_in_the_git_history) ... ok
+test_R_B16_the_license_is_mit_and_the_readme_says_so (test_public.PublicTests.test_R_B16_the_license_is_mit_and_the_readme_says_so) ... ok
+test_R_B13_enter_and_space_on_the_sound_button_toggle_sound_and_do_not_start (test_review.ReviewTests.test_R_B13_enter_and_space_on_the_sound_button_toggle_sound_and_do_not_start) ... ok
+test_R_B13_enter_on_the_replay_link_opens_the_replay (test_review.ReviewTests.test_R_B13_enter_on_the_replay_link_opens_the_replay) ... ok
+test_R_B13_only_the_left_mouse_button_plays (test_review.ReviewTests.test_R_B13_only_the_left_mouse_button_plays) ... ok
+test_R_B14_the_board_label_tells_the_game_status (test_review.ReviewTests.test_R_B14_the_board_label_tells_the_game_status) ... ok
+test_R_B17_the_page_and_the_service_agree_on_a_whole_game (test_service.ServiceTests.test_R_B17_the_page_and_the_service_agree_on_a_whole_game) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 43.230s
+
+OK
+== 5/6 deliberate page faults: break the page, the named browser test must fail each time ==
+caught    a swipe does not steer  <- test_R_B3_touch_tap_starts_swipes_steer_tap_restarts
+caught    a tap does nothing  <- test_R_B3_touch_tap_starts_swipes_steer_tap_restarts
+caught    a swipe after game over restarts the game  <- test_R_B3_touch_tap_starts_swipes_steer_tap_restarts
+caught    one finger can steer only once  <- test_R_B3_one_long_swipe_can_steer_twice
+caught    the W, A, S, D keys are dead  <- test_R_B2_keyboard_plays_from_ready_to_over_and_restarts
+caught    an arrow key restarts a finished game  <- test_R_B2_arrow_keys_do_not_restart_a_finished_game
+caught    the score on the page is never updated  <- test_R_B4_score_on_the_page_is_the_logic_score
+caught    the seed in the address is ignored  <- test_R_B5_same_seed_and_same_keys_give_the_same_run
+caught    every game without a seed uses seed 1  <- test_R_B5_without_a_seed_each_game_gets_its_own_seed
+caught    a replay ignores the turn log  <- test_R_B6_real_time_run_replays_to_the_same_result
+caught    the replay link carries no turns  <- test_R_B6_real_time_run_replays_to_the_same_result
+caught    a replay can be steered  <- test_R_B6_real_time_run_replays_to_the_same_result
+caught    a broken replay link crashes the page  <- test_R_B6_a_broken_replay_link_falls_back_to_a_normal_game
+caught    the page tries to load a tracking pixel  <- test_R_B7_no_network
+caught    the security policy allows any connection  <- test_R_B7_the_browser_blocks_a_request_if_one_is_tried
+caught    mute does not stop the sounds  <- test_R_B8_sound_is_scheduled_on_eat_and_not_when_muted
+caught    game events play no sound  <- test_R_B8_sound_is_scheduled_on_eat_and_not_when_muted
+caught    the audio is never unlocked  <- test_R_B8_sound_is_scheduled_on_eat_and_not_when_muted
+caught    the canvas ignores the height of the bar  <- test_R_B9_fits_phone_viewports_without_scrolling
+caught    the bar labels may wrap and overflow  <- test_R_B9_fits_phone_viewports_without_scrolling
+caught    pause does not stop the clock  <- test_R_B11_pause_stops_the_clock_and_a_hidden_tab_pauses
+caught    a hidden tab does not pause  <- test_R_B11_pause_stops_the_clock_and_a_hidden_tab_pauses
+caught    the bar is too wide for a small phone  <- test_R_B9_fits_phone_viewports_without_scrolling
+caught    Enter on the sound button starts a game  <- test_R_B13_enter_and_space_on_the_sound_button_toggle_sound_and_do_not_start
+caught    Enter on the replay link restarts instead of opening it  <- test_R_B13_enter_on_the_replay_link_opens_the_replay
+caught    any mouse button plays  <- test_R_B13_only_the_left_mouse_button_plays
+caught    the board label never changes  <- test_R_B14_the_board_label_tells_the_game_status
+caught    the page forbids zooming  <- test_R_B14_the_board_label_tells_the_game_status
+caught    the replay link points at the root of the site  <- test_R_B15_works_from_a_sub_path
+caught    Space starts the grub moving  <- test_R_B2_keyboard_plays_from_ready_to_over_and_restarts
+caught    a tap starts the grub moving  <- test_R_B3_touch_tap_starts_swipes_steer_tap_restarts
+caught    a new game after game over moves at once  <- test_R_B2_arrow_keys_do_not_restart_a_finished_game
+caught    the start panel stays after Space  <- test_R_B2_arrow_keys_do_not_restart_a_finished_game
+caught    the page throws while loading  <- test_R_B1_loads_clean_and_draws
+caught    nothing is drawn on the board  <- test_R_B1_loads_clean_and_draws
+caught    the page uses a module script, which file:// refuses  <- test_R_B10_works_opened_from_disk
+36/36 deliberate page faults were caught by the browser tests
+== 6/6 every requirement is named by a test ==
+R-L1    4 test(s)
+R-L2    1 test(s)
+R-L3    2 test(s)
+R-L4    3 test(s)
+R-L5    1 test(s)
+R-L6    2 test(s)
+R-L7    2 test(s)
+R-L8    5 test(s)
+R-L9    1 test(s)
+R-L10   1 test(s)
+R-L11   1 test(s)
+R-L12   4 test(s)
+R-L13   1 test(s)
+R-L14   2 test(s)
+R-L15   1 test(s)
+R-P1    3 test(s)
+R-P2    1 test(s)
+R-P3    2 test(s)
+R-B1    1 test(s)
+R-B2    3 test(s)
+R-B3    3 test(s)
+R-B4    1 test(s)
+R-B5    2 test(s)
+R-B6    2 test(s)
+R-B7    2 test(s)
+R-B8    1 test(s)
+R-B9    1 test(s)
+R-B10   1 test(s)
+R-B11   1 test(s)
+R-B12   1 test(s)
+R-B13   3 test(s)
+R-B14   1 test(s)
+R-B15   2 test(s)
+R-B16   3 test(s)
+R-B17   1 test(s)
+R-S1    2 test(s)
+R-S2    4 test(s)
+R-S3    4 test(s)
+R-S4    4 test(s)
+R-S5    1 test(s)
+R-S6    2 test(s)
+R-S7    1 test(s)
+R-S8    2 test(s)
+R-S9    1 test(s)
+R-J1    2 test(s)
+R-J2    3 test(s)
+R-J3    2 test(s)
+R-J4    3 test(s)
+R-J5    1 test(s)
+R-J6    2 test(s)
+R-J7    2 test(s)
+R-J8    3 test(s)
+52/52 requirements (prefix R-) are named by a test
+ALL CHECKS PASSED
+----------------------------------------------------------------------
+exit code: 0

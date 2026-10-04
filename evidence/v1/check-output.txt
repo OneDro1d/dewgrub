@@ -1,6 +1,6 @@
 version:      v1
-git ref:      v1 (4e2157ac89add2559f7723171d98e96176d93dc1)
-regenerated:  2026-10-04T14:55:47Z by tools/regen-evidence.sh, on a fresh clone of that ref
+git ref:      v1 (0c3d9990f8e6b4d17982766fd548f8aac7af86ed)
+regenerated:  2026-10-04T16:08:41Z by tools/regen-evidence.sh, on a fresh clone of that ref
 node:         v20.20.2
 command:      ./check.sh
 expected:     the command should pass
@@ -11,137 +11,137 @@ TAP version 13
 # Subtest: R-L1 same seed and same turns give the same hash after every tick
 ok 1 - R-L1 same seed and same turns give the same hash after every tick
   ---
-  duration_ms: 39.157902
+  duration_ms: 40.224673
   ...
 # Subtest: R-L1 different seeds put the first dew in different places
 ok 2 - R-L1 different seeds put the first dew in different places
   ---
-  duration_ms: 0.340222
+  duration_ms: 0.519572
   ...
 # Subtest: R-L2 a new game has the documented starting state
 ok 3 - R-L2 a new game has the documented starting state
   ---
-  duration_ms: 0.208262
+  duration_ms: 0.276699
   ...
 # Subtest: R-L3 nothing moves while the game is ready
 ok 4 - R-L3 nothing moves while the game is ready
   ---
-  duration_ms: 0.122664
+  duration_ms: 0.161125
   ...
 # Subtest: R-L3 one step moves the head one cell and keeps the length
 ok 5 - R-L3 one step moves the head one cell and keeps the length
   ---
-  duration_ms: 0.155347
+  duration_ms: 0.197114
   ...
 # Subtest: R-L4 a turn takes effect on the next step
 ok 6 - R-L4 a turn takes effect on the next step
   ---
-  duration_ms: 0.167404
+  duration_ms: 0.221279
   ...
 # Subtest: R-L4 a reversal or a repeat of the current direction is rejected
 ok 7 - R-L4 a reversal or a repeat of the current direction is rejected
   ---
-  duration_ms: 0.120432
+  duration_ms: 0.158423
   ...
 # Subtest: R-L4 two turns can wait, a third is rejected, each is checked against the one before
 ok 8 - R-L4 two turns can wait, a third is rejected, each is checked against the one before
   ---
-  duration_ms: 0.141296
+  duration_ms: 0.187357
   ...
 # Subtest: R-L5 leaving the grid on any side ends the game with cause wall
 ok 9 - R-L5 leaving the grid on any side ends the game with cause wall
   ---
-  duration_ms: 0.238643
+  duration_ms: 0.320658
   ...
 # Subtest: R-L6 running into the body ends the game with cause self
 ok 10 - R-L6 running into the body ends the game with cause self
   ---
-  duration_ms: 0.19119
+  duration_ms: 0.25167
   ...
 # Subtest: R-L6 moving onto the cell the tail leaves is legal
 ok 11 - R-L6 moving onto the cell the tail leaves is legal
   ---
-  duration_ms: 0.156763
+  duration_ms: 0.207442
   ...
 # Subtest: R-L7 eating dew scores 10, grows by one and places new dew on a free cell
 ok 12 - R-L7 eating dew scores 10, grows by one and places new dew on a free cell
   ---
-  duration_ms: 0.221639
+  duration_ms: 0.312826
   ...
 # Subtest: R-L8 a spore appears after the 5th dew, lasts 40 ticks, then is gone
 ok 13 - R-L8 a spore appears after the 5th dew, lasts 40 ticks, then is gone
   ---
-  duration_ms: 0.205581
+  duration_ms: 0.216382
   ...
 # Subtest: R-L8 eating a spore scores 50 and does not grow
 ok 14 - R-L8 eating a spore scores 50 and does not grow
   ---
-  duration_ms: 0.156025
+  duration_ms: 0.165427
   ...
 # Subtest: R-L8 a spore on its last tick can still be eaten
 ok 15 - R-L8 a spore on its last tick can still be eaten
   ---
-  duration_ms: 0.116982
+  duration_ms: 0.119636
   ...
 # Subtest: R-L8 no second spore appears while one exists
 ok 16 - R-L8 no second spore appears while one exists
   ---
-  duration_ms: 0.230274
+  duration_ms: 0.228746
   ...
 # Subtest: R-L9 tick length starts at 150 ms, drops 8 ms per 3 dew, floor 70 ms
 ok 17 - R-L9 tick length starts at 150 ms, drops 8 ms per 3 dew, floor 70 ms
   ---
-  duration_ms: 0.137543
+  duration_ms: 0.137637
   ...
 # Subtest: R-L10 after game over, step and turn change nothing
 ok 18 - R-L10 after game over, step and turn change nothing
   ---
-  duration_ms: 0.205313
+  duration_ms: 0.207348
   ...
 # Subtest: R-L11 filling the grid ends the game with cause full
 ok 19 - R-L11 filling the grid ends the game with cause full
   ---
-  duration_ms: 0.141728
+  duration_ms: 0.150279
   ...
 # Subtest: R-L12 accepted turns are logged with their tick, rejected ones are not
 ok 20 - R-L12 accepted turns are logged with their tick, rejected ones are not
   ---
-  duration_ms: 0.16628
+  duration_ms: 0.17017
   ...
 # Subtest: R-L12 replay of seed and turn log reproduces the final state
 ok 21 - R-L12 replay of seed and turn log reproduces the final state
   ---
-  duration_ms: 32.594203
+  duration_ms: 32.740004
   ...
 # Subtest: R-L12 the turn log encodes to a URL-safe string and back
 ok 22 - R-L12 the turn log encodes to a URL-safe string and back
   ---
-  duration_ms: 19.977558
+  duration_ms: 20.042423
   ...
 # Subtest: R-L12 a malformed turn log is rejected
 ok 23 - R-L12 a malformed turn log is rejected
   ---
-  duration_ms: 0.272438
+  duration_ms: 0.304044
   ...
 # Subtest: R-L13 seed parsing
 ok 24 - R-L13 seed parsing
   ---
-  duration_ms: 0.182507
+  duration_ms: 0.183487
   ...
 # Subtest: R-L14 invariants hold on every tick of 100 games by the scripted player
 ok 25 - R-L14 invariants hold on every tick of 100 games by the scripted player
   ---
-  duration_ms: 2204.221377
+  duration_ms: 2211.374361
   ...
 # Subtest: R-L14 invariants hold on every tick of 100 games with random input
 ok 26 - R-L14 invariants hold on every tick of 100 games with random input
   ---
-  duration_ms: 5.516902
+  duration_ms: 5.614759
   ...
 # Subtest: R-L15 step reports what happened and snapshot is a copy
 ok 27 - R-L15 step reports what happened and snapshot is a copy
   ---
-  duration_ms: 0.144269
+  duration_ms: 0.151252
   ...
 1..27
 # tests 27
@@ -151,7 +151,7 @@ ok 27 - R-L15 step reports what happened and snapshot is a copy
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 2364.55282
+# duration_ms 2375.601159
 == 2/2 every logic requirement is named by a test ==
 R-L1    2 test(s)
 R-L2    1 test(s)

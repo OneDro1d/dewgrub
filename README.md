@@ -26,8 +26,8 @@ Three commands, in this folder, on a machine with Node 20 or newer, git and Pyth
     playwright install chromium
     ./check.sh
 
-The last line must be `ALL CHECKS PASSED`. It takes about 12 minutes; `./check.sh --quick` skips the slowest step and
-takes about 4. Use a virtual environment if you do not want Playwright installed for your whole user
+The last line must be `ALL CHECKS PASSED`. It takes about 9 minutes; `./check.sh --quick` skips the slowest step and
+takes about 5. Use a virtual environment if you do not want Playwright installed for your whole user
 (`python3 -m venv .venv`, then `. .venv/bin/activate`, then the three commands).
 
 These three commands were run exactly like that on a fresh clone, in a fresh virtual environment, with an empty

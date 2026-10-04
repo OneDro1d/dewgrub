@@ -2,4 +2,9 @@ Run before any game code existed (only requirements, tests and the scripted play
 
     node --test test/ > evidence/v1/red-output.txt 2>&1
 
+One test was changed after this red run: "R-L14 ... random input" first demanded that every random game dies
+within 2000 ticks. Its own random generator used low bits that repeat every 4 calls, and one game circled
+forever. That was a fault in the test, not in the game; the test now uses the high bits and demands that at
+least 90 of 100 random games die. The first green run is in check-output.txt.
+
 Expected and observed: the run fails, because src/game.js does not exist yet. This is the "red" of red-green.

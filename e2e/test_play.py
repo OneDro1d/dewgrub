@@ -54,8 +54,11 @@ class PlayTests(BrowserCase):
         page = self.open("seed=123&clock=manual", **PHONE)
         finger = Finger(page)
         self.assertEqual(self.state(page)["status"], "ready")
+        # v6: a tap only puts the start panel away. The first swipe starts the game.
         finger.tap()
-        self.assertEqual(self.state(page)["status"], "playing")
+        s = self.state(page)
+        self.assertEqual((s["status"], s["armed"]), ("ready", True))
+        self.assertEqual(self.step(page, 3)["tick"], 0, "nothing moves before the first steer")
         for d in ["U", "L", "D", "R", "U"]:
             finger.swipe(d)
             self.assertEqual(self.step(page, 1)["dir"], d, f"swipe {d}")
@@ -67,12 +70,14 @@ class PlayTests(BrowserCase):
         self.assertEqual(self.state(page)["status"], "over")
         finger.tap()
         s = self.state(page)
-        self.assertEqual((s["status"], s["score"], s["tick"]), ("playing", 0, 0))
+        self.assertEqual((s["status"], s["armed"], s["score"], s["tick"]), ("ready", True, 0, 0))
+        finger.swipe("D")
+        self.assertEqual(self.state(page)["status"], "playing")
 
     def test_R_B3_one_long_swipe_can_steer_twice(self):
         page = self.open("seed=123&clock=manual", **PHONE)
         finger = Finger(page)
-        finger.tap()
+        finger.swipe("R")  # starts the game; R is the way the grub already faces, so it adds no turn
         finger._send("touchStart", [{"x": 200, "y": 600}])
         finger._send("touchMove", [{"x": 200, "y": 560}])   # up
         finger._send("touchMove", [{"x": 160, "y": 560}])   # then left, same finger
@@ -83,6 +88,7 @@ class PlayTests(BrowserCase):
         page = self.open("seed=321", **PHONE)
         finger = Finger(page)
         finger.tap()
+        finger.swipe("R")
         self.play_realtime(page, finger.swipe, target_score=20)
         s = self.state(page)
         self.assertEqual(s["status"], "over")
@@ -91,7 +97,7 @@ class PlayTests(BrowserCase):
 
     def test_R_B6_real_time_run_replays_to_the_same_result(self):
         page = self.open("seed=2026")
-        page.keyboard.press("Space")
+        page.keyboard.press("ArrowRight")  # the first steer starts the game
         self.play_realtime(page, lambda d: page.keyboard.press(KEY[d]), target_score=30)
         s = self.state(page)
         self.assertEqual(s["status"], "over")
@@ -121,11 +127,13 @@ class PlayTests(BrowserCase):
         self.assertEqual(r["logText"], s["logText"])
         self.assertFalse(r["replaying"])
 
-        # 3. After the replay, Space starts a normal game with the same seed.
+        # 3. After the replay, Space gives a normal game with the same seed, waiting for the first steer.
         again.wait_for_timeout(450)
         again.keyboard.press("Space")
         n = self.state(again)
-        self.assertEqual((n["status"], n["replaying"], n["seed"], n["score"]), ("playing", False, 2026, 0))
+        self.assertEqual((n["status"], n["replaying"], n["seed"], n["score"]), ("ready", False, 2026, 0))
+        again.keyboard.press("ArrowDown")
+        self.assertEqual(self.state(again)["status"], "playing")
 
     def test_R_B6_a_broken_replay_link_falls_back_to_a_normal_game(self):
         page = self.open("seed=5&replay=not-a-log&clock=manual")
@@ -143,7 +151,7 @@ class PlayTests(BrowserCase):
         }""")
         starts = lambda: page.evaluate("() => window.__oscStarts")
         self.assertEqual(page.evaluate("() => window.__dewgrub.sounds().context"), "none")
-        page.keyboard.press("Space")
+        page.keyboard.press("ArrowRight")
         self.assertEqual(starts(), 3, "the start jingle is 3 notes")
         self.bot_manual(page, lambda s: s["score"] >= 10)
         page.wait_for_function("() => window.__dewgrub.sounds().context === 'running'")

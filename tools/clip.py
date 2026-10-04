@@ -2,7 +2,7 @@
 (a headless browser's video has no audio track; the game's sounds are not in the clip).
 
 What the clip shows, in order:
-  1. the start panel;
+  1. the start panel, then the board waiting for the first steer;
   2. a seeded run by the scripted player (tools/bot.mjs): at least 8 dew and one gold spore, then it stops
      steering and the grub hits a wall;
   3. the game-over panel;
@@ -51,8 +51,10 @@ with sync_playwright() as pw:
     page.goto((ROOT / "dist" / "index.html").as_uri() + f"?seed={SEED}&clock=manual")
     page.wait_for_function("() => window.__dewgrub !== undefined")
     page.wait_for_timeout(HOLD_MS)                                   # 1. start panel
+    page.keyboard.press("Space")                                     #    Space puts the panel away; nothing moves yet
+    page.wait_for_timeout(1500)
 
-    page.keyboard.press("Space")                                     # 2. the live run
+    page.keyboard.press("ArrowRight")                                # 2. the live run: the first steer starts it
     while True:
         t0 = time.time()
         s = page.evaluate("""() => {

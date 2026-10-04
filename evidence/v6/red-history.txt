@@ -1,0 +1,25 @@
+test_R_B16_no_personal_name_or_address_in_the_git_history (test_public.PublicTests.test_R_B16_no_personal_name_or_address_in_the_git_history) ... FAIL
+test_R_B17_the_page_and_the_service_agree_on_a_whole_game (test_service.ServiceTests.test_R_B17_the_page_and_the_service_agree_on_a_whole_game) ... ok
+
+======================================================================
+FAIL: test_R_B16_no_personal_name_or_address_in_the_git_history (test_public.PublicTests.test_R_B16_no_personal_name_or_address_in_the_git_history)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_public.py", line 114, in test_R_B16_no_personal_name_or_address_in_the_git_history
+    self.assertEqual(sorted(set(log)), [f"{NEUTRAL} | {NEUTRAL}"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['<a person> <<a person>@<a work domain>[63 chars]om>'] != ['OneDroid Showcase Builder <showcase-build[99 chars]ai>']
+
+First differing element 0:
+'<a person> <<a person>@<a work domain>[62 chars]com>'
+'OneDroid Showcase Builder <showcase-build[98 chars].ai>'
+
+- ['<a person> <<a person>@<a work domain>> | <a person> '
+-  '<<a person>@<a work domain>>']
++ ['OneDroid Showcase Builder <showcase-builder@users.noreply.onedroid.ai> | '
++  'OneDroid Showcase Builder <showcase-builder@users.noreply.onedroid.ai>']
+
+----------------------------------------------------------------------
+Ran 2 tests in 2.003s
+
+FAILED (failures=1)

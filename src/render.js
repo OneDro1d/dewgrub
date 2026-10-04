@@ -124,7 +124,7 @@ function panel(ctx, y, h) {
   ctx.strokeRect(17, y + 1, VIEW_W - 34, h - 2);
 }
 
-// view: { g, best, paused, muted, replaying, now, sporeTicks }. Returns the list of texts it drew.
+// view: { g, best, paused, armed, muted, replaying, now, sporeTicks }. Returns the list of texts it drew.
 export function drawFrame(ctx, view) {
   const g = view.g;
   const drawn = [];
@@ -149,12 +149,15 @@ export function drawFrame(ctx, view) {
   ctx.lineWidth = 2;
   ctx.strokeRect(1, 1, g.cols * CELL - 2, g.rows * CELL - 2);
 
-  if (g.status === 'ready') {
+  if (g.status === 'ready' && view.armed) {
+    // The start panel is away and the grub waits for the first steer.
+    drawText(ctx, drawn, TEXTS.hint, mid, 196, 2, Math.floor(view.now / 500) % 2 ? GOLD : INK, 'center');
+  } else if (g.status === 'ready') {
     // Above the middle row, so the grub and its first move stay visible.
     panel(ctx, 24, 116);
     drawText(ctx, drawn, TEXTS.title, mid, 40, 6, '#9be564', 'center');
-    drawText(ctx, drawn, TEXTS.go, mid, 90, 2, INK, 'center');
-    drawText(ctx, drawn, TEXTS.steer, mid, 112, 2, DIM, 'center');
+    drawText(ctx, drawn, TEXTS.start, mid, 90, 2, INK, 'center');
+    drawText(ctx, drawn, TEXTS.toStart, mid, 112, 2, DIM, 'center');
   } else if (g.status === 'over') {
     panel(ctx, 76, 150);
     drawText(ctx, drawn, TEXTS.over, mid, 92, 5, g.cause === 'full' ? GOLD : '#ff8a6a', 'center');

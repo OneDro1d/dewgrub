@@ -88,3 +88,39 @@ length, pressing a real key for every turn. A scripted player racing the page's 
 now and then and record a different run on every machine. Stepped, the recorded run is exactly the run
 `tools/clip-seed.mjs` computes, and the script checks that. The replay half of the clip runs on the page's own
 clock. Rejected: recording a real-time bot run and accepting whatever it produced.
+
+## D13 — Nothing moves before the first steer (4 Oct 2026, v6)
+
+A first-time player pressing Space and then nothing hit the wall in 1.5 seconds. Now Space or a tap only puts the
+start panel away; the grub sets off when a direction is pressed or swiped, and a new game after game over waits the
+same way. This is a change of the page only: no rule of the game logic changed, and every replay address made
+before still ends in the same state. Rejected: slower first ticks (buys 0.9 s, changes rule R-L9), starting
+further from the wall or wrapping walls (both change every seeded run and break every replay address).
+
+## D14 — The service: what "the end of the log" means, and what is an error (4 Oct 2026, v6)
+
+`/api/replay` plays to one tick after the last logged turn, and says `playing` if the grub is still alive there.
+The page's replay goes on straight to the wall instead; `"finish": true` asks the service for that, so both
+readings are available and neither is a guess. A turn the game does not accept (a reversal, a repeat) is skipped,
+as the page skips it, and is not an error: an error would make the service stricter than the game it describes.
+A seed outside 0 to 4294967295 is an error, although the page wraps it: an API should not quietly change a number
+it was given. Limits (100000 ticks, 65536 bytes) are in `docs/API.md` and a test fails if the doc loses them.
+
+## D15 — The Jev player is proven against a fake, and says so everywhere (4 Oct 2026, v6)
+
+There was no key, and looking for one was forbidden. So the player, its retries, its budget and its handling of
+the key are tested against a fake server written from the model's public API description. That proves the player
+does what it was designed to do; it does not prove the design matches the real service. The README, STACK.md and
+the requirements (NP-10) say so, and the benchmark prints no number for Jev without a real run. The model is asked
+for a move relative to the heading (left, straight, right), so no answer can be a reversal. Everything that talks
+to the model is one function in `tools/jev-transport.mjs`, so another way of reaching the model is one module to
+swap. In the benchmark every player gets the same seeds and the same cap in ticks, so the cap cannot favour one.
+
+## D16 — The author of every commit was rewritten, once (4 Oct 2026, v6)
+
+The history was made on a machine whose git identity was a person's name and work address. Before the repository
+can be public that had to go. `tools/rewrite-authors.sh` set author and committer of every commit to a role name
+with a no-reply address, kept every date and message, moved the tags, and dropped the old commits from the local
+repository. Every commit id changed, so it was done once, after the last code of v6, and the evidence that quotes
+ids was regenerated afterwards. A test (R-B16) now fails if any commit carries another identity. Rejected:
+publishing one fresh commit with no history (it would lose the commit times that make "one sitting" checkable).

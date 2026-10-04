@@ -41,12 +41,16 @@ class ReviewTests(BrowserCase):
 
     def test_R_B13_only_the_left_mouse_button_plays(self):
         page = self.open("seed=123&clock=manual")
+        # A right or middle click does nothing at all: it does not even put the start panel away.
         page.mouse.click(300, 300, button="right")
-        self.assertEqual(self.state(page)["status"], "ready")
+        s = self.state(page)
+        self.assertEqual((s["status"], s["armed"]), ("ready", False))
         page.mouse.click(300, 300, button="middle")
-        self.assertEqual(self.state(page)["status"], "ready")
-        page.mouse.click(300, 300)
-        self.assertEqual(self.state(page)["status"], "playing")
+        s = self.state(page)
+        self.assertEqual((s["status"], s["armed"]), ("ready", False))
+        page.mouse.click(300, 300)  # a left click is a tap: it puts the start panel away, nothing moves yet
+        s = self.state(page)
+        self.assertEqual((s["status"], s["armed"]), ("ready", True))
         # A mouse drag steers like a swipe.
         page.mouse.move(300, 300)
         page.mouse.down()
@@ -57,7 +61,7 @@ class ReviewTests(BrowserCase):
     def test_R_B14_the_board_label_tells_the_game_status(self):
         page = self.open("seed=123&clock=manual")
         label = lambda: page.get_attribute("#board", "aria-label")
-        self.assertIn("Press Space or tap to start", label())
+        self.assertIn("Press an arrow key or swipe to start", label())
         page.keyboard.press("ArrowUp")
         self.assertIn("Playing", label())
         page.keyboard.press("p")

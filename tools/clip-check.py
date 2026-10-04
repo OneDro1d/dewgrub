@@ -41,7 +41,7 @@ print(f"video streams:  {sum(1 for kind, _ in streams if kind == 'Video')}")
 print(f"audio streams:  {sum(1 for kind, _ in streams if kind == 'Audio')}")
 
 frames.mkdir(parents=True, exist_ok=True)
-for at in (2, 9, 18, 22, 30, seconds - 1):
+for at in (2, 5, 9, 19, 24, 32, seconds - 1):
     out = frames / f"at-{at:04.1f}s.png"
     subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-ss", f"{at:.1f}", "-i", str(clip),
                     "-frames:v", "1", "-vf", "scale=540:540", str(out)], check=True)

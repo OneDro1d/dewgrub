@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-cY4ntyPsyvVGCMv++2foyr0g7PFzjgfmuT0bexcEees='; style-src 'sha256-AQKIefzkeqJqHyU2/5dW/G77wg3ZnWyn6SFr5K+CPN8='; img-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-57jRVCMMG6TiZ6+wV4gZ8dbtp1kvYdLb96BtQz7CfC0='; style-src 'sha256-AQKIefzkeqJqHyU2/5dW/G77wg3ZnWyn6SFr5K+CPN8='; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="description" content="Dewgrub: steer a hungry grub to the dew. A small arcade game in one file.">
 <link rel="icon" href="data:,">
 <title>Dewgrub</title>
@@ -334,7 +334,9 @@ const TEXTS = {
   best: 'BEST',
   seed: 'SEED',
   go: 'TAP OR PRESS SPACE',
-  steer: 'SWIPE OR ARROWS TO STEER',
+  start: 'SWIPE OR PRESS AN ARROW',
+  toStart: 'TO START',
+  hint: 'STEER TO START',
   over: 'GAME OVER',
   wall: 'HIT THE WALL',
   self: 'BIT YOURSELF',
@@ -615,7 +617,7 @@ function panel(ctx, y, h) {
   ctx.strokeRect(17, y + 1, VIEW_W - 34, h - 2);
 }
 
-// view: { g, best, paused, muted, replaying, now, sporeTicks }. Returns the list of texts it drew.
+// view: { g, best, paused, armed, muted, replaying, now, sporeTicks }. Returns the list of texts it drew.
 function drawFrame(ctx, view) {
   const g = view.g;
   const drawn = [];
@@ -640,12 +642,15 @@ function drawFrame(ctx, view) {
   ctx.lineWidth = 2;
   ctx.strokeRect(1, 1, g.cols * CELL - 2, g.rows * CELL - 2);
 
-  if (g.status === 'ready') {
+  if (g.status === 'ready' && view.armed) {
+    // The start panel is away and the grub waits for the first steer.
+    drawText(ctx, drawn, TEXTS.hint, mid, 196, 2, Math.floor(view.now / 500) % 2 ? GOLD : INK, 'center');
+  } else if (g.status === 'ready') {
     // Above the middle row, so the grub and its first move stay visible.
     panel(ctx, 24, 116);
     drawText(ctx, drawn, TEXTS.title, mid, 40, 6, '#9be564', 'center');
-    drawText(ctx, drawn, TEXTS.go, mid, 90, 2, INK, 'center');
-    drawText(ctx, drawn, TEXTS.steer, mid, 112, 2, DIM, 'center');
+    drawText(ctx, drawn, TEXTS.start, mid, 90, 2, INK, 'center');
+    drawText(ctx, drawn, TEXTS.toStart, mid, 112, 2, DIM, 'center');
   } else if (g.status === 'over') {
     panel(ctx, 76, 150);
     drawText(ctx, drawn, TEXTS.over, mid, 92, 5, g.cause === 'full' ? GOLD : '#ff8a6a', 'center');
@@ -663,7 +668,7 @@ function drawFrame(ctx, view) {
 // ---- main.js ----
 // The page: wires the clock, the keyboard, the touch screen, the sounds and the canvas to the game logic.
 
-const VERSION = 'v5';
+const VERSION = 'v6';
 const RESTART_GUARD_MS = 350; // a key or tap this soon after dying is ignored, so a late move cannot restart
 
 const params = new URLSearchParams(window.location.search);
@@ -684,6 +689,7 @@ const audio = createAudio(window);
 let game = null;
 let best = 0;
 let paused = false;
+let armed = false;
 let replaying = false;
 let replayAt = 0;
 let overAt = 0;
@@ -698,8 +704,10 @@ function freshSeed() {
   return Date.now() >>> 0;
 }
 
-function newGame() {
+// armed: the start panel has been put away (by Space, a tap, or a restart) and the game waits for the first steer.
+function newGame(afterRestart) {
   game = createGame(freshSeed());
+  armed = Boolean(afterRestart);
   paused = false;
   carry = 0;
   replayEl.hidden = true;
@@ -725,8 +733,8 @@ const CAUSES = { wall: 'hit the wall', self: 'bit yourself', full: 'the grid is 
 function describe() {
   let text = 'Playing.';
   if (replaying) text = 'Replay of a recorded run.';
-  else if (game.status === 'ready') text = 'Press Space or tap to start. Steer with the arrow keys or by swiping.';
-  else if (game.status === 'over') text = `Game over: ${CAUSES[game.cause]}. Score ${game.score}. Press Space or tap to play again.`;
+  else if (game.status === 'ready') text = 'Press an arrow key or swipe to start. Nothing moves before that.';
+  else if (game.status === 'over') text = `Game over: ${CAUSES[game.cause]}. Score ${game.score}. Press Space or tap for a new game.`;
   else if (paused) text = `Paused. Score ${game.score}. Press P or Space to go on.`;
   const label = `Dewgrub game board. ${text}`;
   if (canvas.getAttribute('aria-label') !== label) canvas.setAttribute('aria-label', label);
@@ -766,11 +774,8 @@ function handle(intent) {
   }
   if (replaying) return; // a replay is watched, not steered
   if (game.status === 'over') {
-    if (intent.type === 'go' && performance.now() - overAt >= RESTART_GUARD_MS) {
-      newGame();
-      start(game);
-      audio.play('start');
-    }
+    // A new game after game over waits for the first steer, like the first one.
+    if (intent.type === 'go' && performance.now() - overAt >= RESTART_GUARD_MS) newGame(true);
     return;
   }
   if (intent.type === 'pause') {
@@ -782,6 +787,9 @@ function handle(intent) {
     return;
   }
   if (game.status === 'ready') {
+    // Space or a tap only puts the start panel away. The grub moves once a direction is pressed or swiped,
+    // so nobody loses before having steered.
+    if (intent.type !== 'turn') { armed = true; return; }
     start(game);
     audio.play('start');
   }
@@ -801,7 +809,7 @@ function frame(now) {
   lastFrame = now;
   ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
   lastDrawn = drawFrame(ctx, {
-    g: game, best, paused, muted: audio.isMuted(), replaying, now, sporeTicks: SPORE_TICKS,
+    g: game, best, paused, armed, muted: audio.isMuted(), replaying, now, sporeTicks: SPORE_TICKS,
   });
   window.requestAnimationFrame(frame);
 }
@@ -876,6 +884,7 @@ window.__dewgrub = {
   state() {
     const s = snapshot(game);
     s.paused = paused;
+    s.armed = armed;
     s.muted = audio.isMuted();
     s.replaying = replaying;
     s.best = best;

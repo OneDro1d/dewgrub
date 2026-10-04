@@ -43,21 +43,39 @@ class PageTests(BrowserCase):
     def test_R_B2_keyboard_plays_from_ready_to_over_and_restarts(self):
         page = self.open("seed=123")  # real clock
         self.assertEqual(self.state(page)["status"], "ready")
+        # v6: Space only puts the start panel away. Nothing moves until the first steer.
+        page.keyboard.press("Space")
+        s = self.state(page)
+        self.assertEqual((s["status"], s["armed"], s["tick"]), ("ready", True, 0))
+        page.wait_for_timeout(500)
+        s = self.state(page)
+        self.assertEqual((s["status"], s["tick"], s["grub"][0]), ("ready", 0, {"x": 10, "y": 10}))
+        page.wait_for_function("() => window.__dewgrub.drawn().includes('STEER TO START')")
+        self.assertEqual(page.evaluate("() => window.__dewgrub.drawn()").count("DEWGRUB"), 1)  # the title panel is gone
         page.keyboard.press("ArrowUp")
         self.assertEqual(self.state(page)["status"], "playing")
         self.wait_status(page, "over")
         s = self.state(page)
         self.assertEqual(s["cause"], "wall")
         self.assertEqual(s["grub"][0], {"x": 10, "y": 0})
-        self.assertIn("GAME OVER", page.evaluate("window.__dewgrub.drawn()"))
+        self.assertIn("GAME OVER", page.evaluate("() => window.__dewgrub.drawn()"))
         page.wait_for_timeout(450)
+        # Space after game over gives a new game, which again waits for the first steer.
         page.keyboard.press("Space")
         s = self.state(page)
-        self.assertEqual(s["status"], "playing")
-        self.assertEqual(s["score"], 0)
-        self.assertLess(s["tick"], 3)
+        self.assertEqual((s["status"], s["armed"], s["score"], s["tick"]), ("ready", True, 0, 0))
+        page.wait_for_timeout(400)
+        self.assertEqual(self.state(page)["tick"], 0)
         page.keyboard.press("s")
+        self.assertEqual(self.state(page)["status"], "playing")
         page.wait_for_function("() => window.__dewgrub.state().dir === 'D'")
+
+    def test_R_B2_a_steer_starts_the_game_without_space_first(self):
+        page = self.open("seed=123&clock=manual")
+        page.keyboard.press("ArrowRight")  # the direction the grub already faces: it starts and adds no turn
+        s = self.state(page)
+        self.assertEqual((s["status"], s["log"]), ("playing", []))
+        self.assertEqual(self.step(page, 1)["grub"][0], {"x": 11, "y": 10})
 
     def test_R_B2_arrow_keys_do_not_restart_a_finished_game(self):
         page = self.open("seed=123&clock=manual")
@@ -68,11 +86,12 @@ class PageTests(BrowserCase):
         page.keyboard.press("ArrowLeft")
         self.assertEqual(self.state(page)["status"], "over")
         page.keyboard.press("Enter")
-        self.assertEqual(self.state(page)["status"], "playing")
+        s = self.state(page)
+        self.assertEqual((s["status"], s["armed"], s["tick"], s["score"]), ("ready", True, 0, 0))
 
     def test_R_B4_score_on_the_page_is_the_logic_score(self):
         page = self.open("seed=123&clock=manual")
-        page.keyboard.press("Space")
+        page.keyboard.press("ArrowRight")  # the first steer starts the game
         _, s = self.bot_manual(page, lambda s: s["score"] >= 30)
         score = self.state(page)["score"]
         self.assertGreaterEqual(score, 30)
@@ -82,7 +101,7 @@ class PageTests(BrowserCase):
     def test_R_B5_same_seed_and_same_keys_give_the_same_run(self):
         a = self.open("seed=123&clock=manual")
         first_dew = self.state(a)["dew"]
-        a.keyboard.press("Space")
+        a.keyboard.press("ArrowRight")
         presses, _ = self.bot_manual(a, lambda s: s["tick"] >= 150)
         self.step(a, 60)  # stop steering: the grub runs into a wall
         end_a = self.state(a)
@@ -91,7 +110,7 @@ class PageTests(BrowserCase):
 
         b = self.open("seed=123&clock=manual")
         self.assertEqual(self.state(b)["dew"], first_dew)
-        b.keyboard.press("Space")
+        b.keyboard.press("ArrowRight")
         by_tick = {}
         for tick, d in presses:
             by_tick.setdefault(tick, []).append(d)
@@ -119,7 +138,7 @@ class PageTests(BrowserCase):
 
     def test_R_B7_no_network(self):
         page = self.open("seed=7&clock=manual")
-        page.keyboard.press("Space")
+        page.keyboard.press("ArrowRight")
         self.bot_manual(page, lambda s: s["score"] >= 60)
         self.step(page, 60)
         self.assertEqual(self.state(page)["status"], "over")
@@ -151,7 +170,7 @@ class PageTests(BrowserCase):
     def test_R_B10_works_opened_from_disk(self):
         page = self.open(url=(DIST / "index.html").as_uri() + "?seed=5")
         self.assertEqual(self.state(page)["status"], "ready")
-        page.keyboard.press("Space")
+        page.keyboard.press("ArrowRight")
         self.assertEqual(self.state(page)["status"], "playing")
         self.wait_status(page, "over")
 

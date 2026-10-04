@@ -71,6 +71,14 @@ const MUTANTS = [
     'test_R_B14_the_board_label_tells_the_game_status'],
   ['the replay link points at the root of the site', 'src/main.js', 'replayEl.href = `?seed=', 'replayEl.href = `/?seed=',
     'test_R_B15_works_from_a_sub_path'],
+  ['Space starts the grub moving', 'src/main.js', "if (intent.type !== 'turn') { armed = true; return; }", "if (intent.type !== 'turn') armed = true;",
+    'test_R_B2_keyboard_plays_from_ready_to_over_and_restarts'],
+  ['a tap starts the grub moving', 'src/main.js', "if (intent.type !== 'turn') { armed = true; return; }", "if (intent.type !== 'turn') armed = true;",
+    'test_R_B3_touch_tap_starts_swipes_steer_tap_restarts'],
+  ['a new game after game over moves at once', 'src/main.js', 'RESTART_GUARD_MS) newGame(true);', 'RESTART_GUARD_MS) { newGame(true); start(game); }',
+    'test_R_B2_arrow_keys_do_not_restart_a_finished_game'],
+  ['the start panel stays after Space', 'src/main.js', '  armed = Boolean(afterRestart);', '  armed = false;',
+    'test_R_B2_arrow_keys_do_not_restart_a_finished_game'],
   ['the page throws while loading', 'src/main.js', 'newGame();\nfit();', 'newGame();\nfit();\nnull.x;',
     'test_R_B1_loads_clean_and_draws'],
   ['nothing is drawn on the board', 'src/render.js', "  ctx.save();\n  ctx.translate(0, HUD_H);", "  if (g) return drawn;\n  ctx.save();\n  ctx.translate(0, HUD_H);",
@@ -79,8 +87,11 @@ const MUTANTS = [
     'test_R_B10_works_opened_from_disk'],
 ];
 
+// MUTATE_PAGE_ONLY="mouse" runs only the faults whose description contains that text. Default: all.
+const only = process.env.MUTATE_PAGE_ONLY;
+const chosen = only ? MUTANTS.filter((m) => m[0].includes(only)) : MUTANTS;
 let survived = 0;
-for (const [what, file, find, put, test] of MUTANTS) {
+for (const [what, file, find, put, test] of chosen) {
   const original = readFileSync(join(root, file), 'utf8');
   if (original.split(find).length !== 2) {
     console.error(`SETUP ERROR: ${JSON.stringify(find)} must occur exactly once in ${file}`);
@@ -112,5 +123,5 @@ for (const [what, file, find, put, test] of MUTANTS) {
   }
 }
 rmSync(work, { recursive: true, force: true });
-console.log(`${MUTANTS.length - survived}/${MUTANTS.length} deliberate page faults were caught by the browser tests`);
+console.log(`${chosen.length - survived}/${chosen.length} deliberate page faults were caught by the browser tests`);
 if (survived) process.exit(1);

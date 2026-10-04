@@ -1,0 +1,77 @@
+test_R_B2_a_steer_starts_the_game_without_space_first (test_page.PageTests.test_R_B2_a_steer_starts_the_game_without_space_first) ... ok
+test_R_B2_arrow_keys_do_not_restart_a_finished_game (test_page.PageTests.test_R_B2_arrow_keys_do_not_restart_a_finished_game) ... ERROR
+test_R_B2_keyboard_plays_from_ready_to_over_and_restarts (test_page.PageTests.test_R_B2_keyboard_plays_from_ready_to_over_and_restarts) ... ERROR
+test_R_B3_touch_tap_starts_swipes_steer_tap_restarts (test_play.PlayTests.test_R_B3_touch_tap_starts_swipes_steer_tap_restarts) ... ERROR
+test_R_B6_real_time_run_replays_to_the_same_result (test_play.PlayTests.test_R_B6_real_time_run_replays_to_the_same_result) ... FAIL
+test_R_B13_only_the_left_mouse_button_plays (test_review.ReviewTests.test_R_B13_only_the_left_mouse_button_plays) ... ERROR
+test_R_B14_the_board_label_tells_the_game_status (test_review.ReviewTests.test_R_B14_the_board_label_tells_the_game_status) ... FAIL
+
+======================================================================
+ERROR: test_R_B2_arrow_keys_do_not_restart_a_finished_game (test_page.PageTests.test_R_B2_arrow_keys_do_not_restart_a_finished_game)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_page.py", line 90, in test_R_B2_arrow_keys_do_not_restart_a_finished_game
+    self.assertEqual((s["status"], s["armed"], s["tick"], s["score"]), ("ready", True, 0, 0))
+                                   ~^^^^^^^^^
+KeyError: 'armed'
+
+======================================================================
+ERROR: test_R_B2_keyboard_plays_from_ready_to_over_and_restarts (test_page.PageTests.test_R_B2_keyboard_plays_from_ready_to_over_and_restarts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_page.py", line 49, in test_R_B2_keyboard_plays_from_ready_to_over_and_restarts
+    self.assertEqual((s["status"], s["armed"], s["tick"]), ("ready", True, 0))
+                                   ~^^^^^^^^^
+KeyError: 'armed'
+
+======================================================================
+ERROR: test_R_B3_touch_tap_starts_swipes_steer_tap_restarts (test_play.PlayTests.test_R_B3_touch_tap_starts_swipes_steer_tap_restarts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_play.py", line 60, in test_R_B3_touch_tap_starts_swipes_steer_tap_restarts
+    self.assertEqual((s["status"], s["armed"]), ("ready", True))
+                                   ~^^^^^^^^^
+KeyError: 'armed'
+
+======================================================================
+ERROR: test_R_B13_only_the_left_mouse_button_plays (test_review.ReviewTests.test_R_B13_only_the_left_mouse_button_plays)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_review.py", line 50, in test_R_B13_only_the_left_mouse_button_plays
+    self.assertEqual((s["status"], s["armed"]), ("ready", True))
+                                   ~^^^^^^^^^
+KeyError: 'armed'
+
+======================================================================
+FAIL: test_R_B6_real_time_run_replays_to_the_same_result (test_play.PlayTests.test_R_B6_real_time_run_replays_to_the_same_result)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_play.py", line 134, in test_R_B6_real_time_run_replays_to_the_same_result
+    self.assertEqual((n["status"], n["replaying"], n["seed"], n["score"]), ("ready", False, 2026, 0))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('playing', False, 2026, 0) != ('ready', False, 2026, 0)
+
+First differing element 0:
+'playing'
+'ready'
+
+- ('playing', False, 2026, 0)
+?   ^^  ---
+
++ ('ready', False, 2026, 0)
+?   ^^ +
+
+
+======================================================================
+FAIL: test_R_B14_the_board_label_tells_the_game_status (test_review.ReviewTests.test_R_B14_the_board_label_tells_the_game_status)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_review.py", line 61, in test_R_B14_the_board_label_tells_the_game_status
+    self.assertIn("Press an arrow key or swipe to start", label())
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Press an arrow key or swipe to start' not found in 'Dewgrub game board. Press Space or tap to start. Steer with the arrow keys or by swiping.'
+
+----------------------------------------------------------------------
+Ran 7 tests in 20.306s
+
+FAILED (failures=2, errors=4)

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Proves the three commands of the README's "Check it yourself": on a fresh clone of the current commit, in a
 # fresh Python virtual environment, with an empty Playwright browser cache (so Chromium is really downloaded).
-# Usage: tools/quickstart-proof.sh v5      (downloads Playwright and Chromium; about 10 minutes)
+# Usage: tools/quickstart-proof.sh v6 [git ref]     (the ref defaults to HEAD)
+# It downloads Playwright and Chromium and takes about 12 minutes.
 set -u
 cd "$(dirname "$0")/.."
 root="$(pwd)"
-v="${1:?usage: tools/quickstart-proof.sh vN}"
-sha="$(git rev-parse HEAD)"
+v="${1:?usage: tools/quickstart-proof.sh vN [git ref, default HEAD]}"
+sha="$(git rev-parse "${2:-HEAD}^{commit}")"
 tmp="$(mktemp -d)"
 mkdir -p "evidence/$v"
 out="$root/evidence/$v/quickstart-output.txt"

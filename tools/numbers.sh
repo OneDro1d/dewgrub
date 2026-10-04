@@ -14,7 +14,7 @@ echo "unit tests (node:test):                                   $(grep -c "^test
 echo "browser tests (Playwright):                               $(grep -c "    def test_" e2e/test_*.py | awk -F: '{s+=$2} END {print s}')"
 echo "requirements (docs/REQUIREMENTS.md, R- rows):             $(grep -c '^| R-' docs/REQUIREMENTS.md)"
 echo "not-provable claims (NP- rows):                           $(grep -c '^| NP-' docs/REQUIREMENTS.md)"
-echo "deliberate logic faults (tools/mutate.mjs):               $(grep -c "^  \['" tools/mutate.mjs)"
+echo "deliberate faults in logic, service, players (mutate.mjs): $(grep -c "^  \['" tools/mutate.mjs)"
 echo "deliberate page faults (tools/mutate-page.mjs):           $(grep -c "^  \['" tools/mutate-page.mjs)"
 echo "versions (git tags):                                      $(git tag | tr '\n' ' ')"
 echo "commits:                                                  $(git rev-list --count HEAD)"

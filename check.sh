@@ -11,10 +11,10 @@ cd "$(dirname "$0")"
 PY="${DEWGRUB_PYTHON:-python3}"
 export DEWGRUB_PYTHON="$PY"
 
-echo "== 1/6 unit tests (Node, no browser) =="
+echo "== 1/6 unit tests (Node, no browser): game logic, presentation, the local service, the players =="
 node --test test/
 
-echo "== 2/6 deliberate logic faults: break the logic, the unit tests must notice each time =="
+echo "== 2/6 deliberate faults in the logic, the service and the players: the unit tests must notice each time =="
 node tools/mutate.mjs
 
 echo "== 3/6 the committed dist/index.html is what the source builds to =="

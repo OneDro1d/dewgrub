@@ -1,0 +1,5 @@
+From the repository root, at the commit named in check-output.txt:
+
+    ./check.sh
+
+tools/evidence.sh v3 ran exactly that and wrote its full output, unedited, to check-output.txt.

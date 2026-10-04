@@ -1,7 +1,7 @@
 """Takes screenshots of the built game for a human to look at. They go to .tmp/shots/ (not committed:
 the repository holds no image file). Usage, from the repository root:
 
-    /home/coder/.local/share/smm-venv/bin/python tools/shots.py
+    python3 tools/shots.py        (a Python with Playwright; DEWGRUB_CHROMIUM picks another browser)
 """
 import sys
 from pathlib import Path

@@ -13,7 +13,7 @@ Why:
   the same inputs give the same run" can be proven exactly instead of approximately.
 - Four directions map onto four arrow keys and four swipe directions with nothing left over. The other two mechanics
   need a continuous paddle or a rotate-and-thrust control, which is harder to make equal on keyboard and touch.
-- A viewer understands it in one glance, which the brief asks for.
+- A viewer understands it in one glance, which the task asked for.
 - It fits one working session with room left for the evidence, which is the actual showcase.
 
 ## D2 — Name: Dewgrub (4 Oct 2026)
@@ -64,3 +64,27 @@ not proven instead of being marked fixed.
 
 At three cells wide the W in the title read as an H in screenshots, twice. The font now has two widths. Rejected:
 keeping a uniform 3×5 font for simplicity; the name of the game has to be readable.
+
+## D10 — Old evidence is regenerated, never edited (4 Oct 2026, v5)
+
+The outputs first stored for v1 to v4 carried folder names of the build machine. To make the repository fit for
+strangers they had to go. Editing raw output by hand would make it stop being raw output, so
+`tools/regen-evidence.sh` clones each old tag, runs that tag's own checks again and stores the new output. The only
+change to the text is made by the script and is stated in every file: the machine's folder names are shown as
+`<checkout>`, `<python>` and `<home>`. Rejected: search-and-replace in the stored files (unverifiable), and deleting
+the old evidence (it is what the versions table of the README points at).
+
+## D11 — The check finds Python and the browser the standard way (4 Oct 2026, v5)
+
+`./check.sh` uses `python3` and lets Playwright start the Chromium that `playwright install chromium` put in place.
+Before v5 it defaulted to a path that existed only on the build machine. `DEWGRUB_PYTHON` and `DEWGRUB_CHROMIUM`
+stay as overrides. The proof is `evidence/v5/quickstart-output.txt`: a fresh clone, a fresh virtual environment, an
+empty browser cache, three commands.
+
+## D12 — The clip's live run is stepped by the script, not by the page's clock (4 Oct 2026, v5)
+
+`tools/clip.py` opens the page with the test clock and advances it one tick at a time, at the game's own tick
+length, pressing a real key for every turn. A scripted player racing the page's real clock would turn a tick late
+now and then and record a different run on every machine. Stepped, the recorded run is exactly the run
+`tools/clip-seed.mjs` computes, and the script checks that. The replay half of the clip runs on the page's own
+clock. Rejected: recording a real-time bot run and accepting whatever it produced.

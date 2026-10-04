@@ -2,14 +2,14 @@
 # The one command that re-runs every check. Exit code 0 means all green.
 #   ./check.sh           everything, about 8 minutes
 #   ./check.sh --quick   skips step 5 (the deliberately broken pages), about 2 minutes
-# Needs: Node 20+, git, and a Python with Playwright and a Chromium it can start.
-#   DEWGRUB_PYTHON    the Python to use      (default: the build machine's Playwright venv, else python3)
-#   DEWGRUB_CHROMIUM  the browser executable (default: the newest headless shell Playwright has installed)
+# Needs: Node 20+, git, and a Python with Playwright (pip install playwright; playwright install chromium).
+#   DEWGRUB_PYTHON    the Python to use      (default: python3)
+#   DEWGRUB_CHROMIUM  the browser executable (default: the Chromium that "playwright install chromium" put in place)
 set -eu
 cd "$(dirname "$0")"
 
-PY="${DEWGRUB_PYTHON:-/home/coder/.local/share/smm-venv/bin/python}"
-[ -x "$PY" ] || PY=python3
+PY="${DEWGRUB_PYTHON:-python3}"
+export DEWGRUB_PYTHON="$PY"
 
 echo "== 1/6 unit tests (Node, no browser) =="
 node --test test/

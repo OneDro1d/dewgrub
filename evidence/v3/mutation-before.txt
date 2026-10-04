@@ -1,3 +1,11 @@
+version:      v3
+git ref:      v3~1 (5764c3f8e53b1838f0dc2507e079d84a25ebcbcb)
+regenerated:  2026-10-04T14:56:00Z by tools/regen-evidence.sh, on a fresh clone of that ref
+node:         v20.20.2
+command:      node tools/mutate.mjs
+expected:     the command should fail
+shown as:     <checkout> = the temporary clone, <python> = the Python install, <home> = the home folder
+----------------------------------------------------------------------
 caught    a reversal is accepted  <- R-L4 R-L12 R-L14
 caught    a repeat of the direction is accepted  <- R-L4 R-L12
 caught    three turns can wait  <- R-L4
@@ -26,3 +34,5 @@ caught    a full grid is not noticed  <- R-L11
 caught    step reports no eat event  <- R-L7 R-L11 R-L15
 caught    snapshot is not a copy  <- R-L15
 25/27 deliberate faults were caught by the unit tests
+----------------------------------------------------------------------
+exit code: 1

@@ -4,10 +4,8 @@ Every test, whatever it is about, also fails if the page logs an error or warnin
 request other than loading itself (see tearDown).
 """
 import functools
-import glob
 import http.server
 import os
-import re
 import threading
 import unittest
 from pathlib import Path
@@ -22,14 +20,8 @@ PHONE = dict(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=T
 
 
 def browser_path():
-    """DEWGRUB_CHROMIUM if set, else the newest headless shell Playwright has installed, else Playwright's default."""
-    if os.environ.get("DEWGRUB_CHROMIUM"):
-        return os.environ["DEWGRUB_CHROMIUM"]
-    found = glob.glob(os.path.expanduser(
-        "~/.cache/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-linux64/chrome-headless-shell"))
-    if not found:
-        return None
-    return max(found, key=lambda p: int(re.search(r"shell-(\d+)", p).group(1)))
+    """DEWGRUB_CHROMIUM if set, else None: Playwright then starts the Chromium that `playwright install` put in place."""
+    return os.environ.get("DEWGRUB_CHROMIUM") or None
 
 
 class QuietHandler(http.server.SimpleHTTPRequestHandler):

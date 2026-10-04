@@ -1,7 +1,7 @@
-import glob, os, re, json
+import glob, os, re, json, pathlib
 from playwright.sync_api import sync_playwright
 
-URL = "file:///home/coder/code/onedro1d/showcase-s2/dist/index.html"
+URL = (pathlib.Path(__file__).resolve().parents[2] / "dist" / "index.html").as_uri() + ""
 found = glob.glob(os.path.expanduser("~/.cache/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-linux64/chrome-headless-shell"))
 path = max(found, key=lambda p: int(re.search(r"shell-(\d+)", p).group(1))) if found else None
 

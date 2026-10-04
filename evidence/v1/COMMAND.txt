@@ -1,5 +1,4 @@
-From the repository root, at the commit named in check-output.txt:
-
-    ./check.sh
-
-tools/evidence.sh v1 ran exactly that and wrote its full output, unedited, to check-output.txt.
+Every file in this folder names, in its first lines, the git ref and the command that produced it.
+They were produced by tools/regen-evidence.sh at v5: a fresh clone of the ref, then the command, output unedited
+except that folder names of the machine are shown as <checkout>, <python> and <home>.
+The outputs first stored for this version are in git history, at tag v4.

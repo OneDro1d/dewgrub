@@ -2,14 +2,17 @@
 
 **Who:** a separate read-only sub-agent (Claude Code `Agent` tool, type `general-purpose`), started on 4 Oct 2026
 against tag `v3`. It was given the repository path and the rules below, and nothing else: no build notes, no list of
-suspected weak spots, no access to the builder's notepad. It was forbidden to change the repository.
+suspected weak spots, no access to the builder's working notes. It was forbidden to change the repository.
 
 **What it was asked for:** real defects, each with file and line, the exact scenario, and the raw output of a probe
 it actually ran. Anything it could not run had to be labelled "NOT REPRODUCED, reasoning only".
 
-**What it used:** 24 tool calls, about 3.5 minutes. Its three probe scripts are kept unchanged in
-`evidence/review-probes/` (`p1.mjs` for Node, `b1.py` and `b2.py` for the browser). They point at `dist/index.html`,
-so run against tag `v3` they reproduce the findings, and run against `v4` they show the fixes.
+**What it used:** 24 tool calls, about 3.5 minutes. Its three probe scripts are kept in
+`evidence/review-probes/` (`p1.mjs` for Node, `b1.py` and `b2.py` for the browser). One line in each was changed at
+v5: the absolute path of the build machine became a path relative to the script (the originals are in git history
+at tag `v4`). They still look for the browser where the build machine had it, so on another machine edit the
+`found = ...` line. They point at `dist/index.html`, so with the v3 page they reproduce the findings and with a
+later page they show the fixes.
 
 **How its report was treated:** as a claim, not as a fact. For every finding the builder first wrote a test and ran
 it against the unfixed v3 page. `evidence/v4/red-output.txt` is that run: all 5 new tests fail there. Only then was

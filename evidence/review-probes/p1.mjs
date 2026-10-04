@@ -1,4 +1,4 @@
-import { createGame, start, turn, step, stateHash, replay, encodeLog, decodeLog, parseSeed } from '/home/coder/code/onedro1d/showcase-s2/src/game.js';
+import { createGame, start, turn, step, stateHash, replay, encodeLog, decodeLog, parseSeed } from '../../src/game.js';
 
 // 1. live-vs-replay fuzz: random turns (accepted or not), random pauses (no steps), like main.js would do
 let bad = 0, n = 0, longest = 0;

@@ -1,0 +1,33 @@
+test_R_B15_the_sub_path_server_really_refuses_the_root (test_public.PublicTests.test_R_B15_the_sub_path_server_really_refuses_the_root) ... ok
+test_R_B15_works_from_a_sub_path (test_public.PublicTests.test_R_B15_works_from_a_sub_path) ... ok
+test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file (test_public.PublicTests.test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file) ... FAIL
+test_R_B16_the_license_is_mit_and_the_readme_says_so (test_public.PublicTests.test_R_B16_the_license_is_mit_and_the_readme_says_so) ... FAIL
+
+======================================================================
+FAIL: test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file (test_public.PublicTests.test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_public.py", line 101, in test_R_B16_no_machine_path_and_no_internal_name_in_any_tracked_file
+    self.assertEqual(hits, [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^
+AssertionError: Lists differ: ['DECISIONS.md:16: the internal word for t[2575 chars]ame'] != []
+
+First list contains 46 additional elements.
+First extra element 0:
+'DECISIONS.md:16: the internal word for the task'
+
+Diff is 2765 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_R_B16_the_license_is_mit_and_the_readme_says_so (test_public.PublicTests.test_R_B16_the_license_is_mit_and_the_readme_says_so)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_public.py", line 107, in test_R_B16_the_license_is_mit_and_the_readme_says_so
+    self.assertTrue("MIT license" in (ROOT / "README.md").read_text(), "the README does not name the MIT license")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : the README does not name the MIT license
+
+----------------------------------------------------------------------
+Ran 4 tests in 8.008s
+
+FAILED (failures=2)

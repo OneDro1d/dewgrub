@@ -2,15 +2,14 @@
 // page into a scratch folder, and demand that the named browser test fails on it.
 // A test that has only ever been seen passing has not been shown to check anything.
 // Usage: node tools/mutate-page.mjs      (about 5 minutes; needs the same Python and browser as check.sh)
-import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const work = join(root, '.tmp', 'mutant-page');
-let py = process.env.DEWGRUB_PYTHON || '/home/coder/.local/share/smm-venv/bin/python';
-if (!existsSync(py)) py = 'python3';
+const py = process.env.DEWGRUB_PYTHON || 'python3';
 
 // [what is broken, file, text to find (exactly once), replacement, the test that must fail]
 const MUTANTS = [
@@ -70,6 +69,8 @@ const MUTANTS = [
     'test_R_B14_the_board_label_tells_the_game_status'],
   ['the page forbids zooming', 'src/index.template.html', ', viewport-fit=cover">', ', viewport-fit=cover, user-scalable=no">',
     'test_R_B14_the_board_label_tells_the_game_status'],
+  ['the replay link points at the root of the site', 'src/main.js', 'replayEl.href = `?seed=', 'replayEl.href = `/?seed=',
+    'test_R_B15_works_from_a_sub_path'],
   ['the page throws while loading', 'src/main.js', 'newGame();\nfit();', 'newGame();\nfit();\nnull.x;',
     'test_R_B1_loads_clean_and_draws'],
   ['nothing is drawn on the board', 'src/render.js', "  ctx.save();\n  ctx.translate(0, HUD_H);", "  if (g) return drawn;\n  ctx.save();\n  ctx.translate(0, HUD_H);",

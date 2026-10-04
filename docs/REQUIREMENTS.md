@@ -49,9 +49,11 @@ is one step of the game clock. The **turn log** is the list of accepted turns, e
 | R-B9 | Fit: at 390×844, 360×640, 844×390 and 320×568 the canvas and every item of the bar under it are inside the viewport, also with a four-digit score, and the page does not scroll. |
 | R-B10 | The built file works opened from disk (`file://`): it loads and a game can be started. |
 | R-B11 | Pause: P stops the clock (the tick does not advance for 600 ms) and P again resumes it. A hidden tab pauses the game. |
-| R-B12 | Originality rules of the brief that a machine can check: the built page and the README title contain none of the banned names, and the repository holds no image, audio or font file. |
+| R-B12 | Originality rules of the task that a machine can check: the built page and the README title contain none of the banned names, and the repository holds no image, audio or font file. |
 | R-B13 | The two controls under the board behave as controls (added in v4, after the blind review): Enter or Space on the focused sound button toggles the sound and does not start a game; Enter on the focused replay link opens the replay; arrow keys still steer whatever has focus. Only the left mouse button plays: a right or middle click does nothing, a left click is a tap, a left drag is a swipe. |
 | R-B14 | The board's accessible label says what is happening (added in v4, after the blind review): how to start, playing, paused, or game over with the cause and the score. The page does not forbid zooming. |
+| R-B15 | Sub-path (added in v5): served from `http://<host>/dewgrub/` by a server that answers 404 everywhere else, the page loads, a seeded game plays to game over, and the replay link stays inside the sub-path and plays the same run back. |
+| R-B16 | Fit for strangers (added in v5): no tracked file contains a home-folder path, a per-user temp path, the operator's name, or the internal names of the workspace the game was built in. The repository carries the MIT license and the README names it. |
 
 ## Not provable by these tests
 
@@ -65,3 +67,4 @@ is one step of the game clock. The **turn log** is the list of accepted turns, e
 | NP-6 | The art looks good. The tests see that the grub, the dew and the texts are drawn, not what they look like to a person. |
 | NP-7 | A really hidden tab pauses the game. The test fakes the browser's "tab is hidden" signal; headless Chromium has no tab to hide. |
 | NP-8 | It is usable with a screen reader. The label of R-B14 exists; nobody listened to it. |
+| NP-9 | It works at its public address. R-B15 proves a sub-path on a local test server; the real host, its headers and its caching were not tested, because nothing was deployed. |

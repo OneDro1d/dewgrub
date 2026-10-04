@@ -1,7 +1,7 @@
-import glob, os, re, json
+import glob, os, re, json, pathlib
 from playwright.sync_api import sync_playwright
 
-URL = "file:///home/coder/code/onedro1d/showcase-s2/dist/index.html?seed=123&clock=manual"
+URL = (pathlib.Path(__file__).resolve().parents[2] / "dist" / "index.html").as_uri() + "?seed=123&clock=manual"
 found = glob.glob(os.path.expanduser("~/.cache/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-linux64/chrome-headless-shell"))
 path = max(found, key=lambda p: int(re.search(r"shell-(\d+)", p).group(1)))
 RECTS = """() => { const r = (id) => { const b = document.getElementById(id).getBoundingClientRect(); return [id, Math.round(b.top), Math.round(b.bottom), Math.round(b.left), Math.round(b.right)]; };

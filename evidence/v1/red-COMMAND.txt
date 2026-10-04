@@ -1,0 +1,5 @@
+Run before any game code existed (only requirements, tests and the scripted player were in the repo):
+
+    node --test test/ > evidence/v1/red-output.txt 2>&1
+
+Expected and observed: the run fails, because src/game.js does not exist yet. This is the "red" of red-green.

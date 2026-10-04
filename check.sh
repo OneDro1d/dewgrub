@@ -19,7 +19,6 @@ echo "== 3/4 browser tests (headless Chromium against dist/index.html) =="
 "$PY" -m unittest discover -s e2e -v
 
 echo "== 4/4 requirements named by a test =="
-node tools/trace.mjs --only=R-L
-node tools/trace.mjs --only=R-P
+node tools/trace.mjs
 
 echo "ALL CHECKS PASSED"

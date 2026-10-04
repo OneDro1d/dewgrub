@@ -1,0 +1,28 @@
+caught    a reversal is accepted  <- R-L4 R-L12 R-L14
+caught    a repeat of the direction is accepted  <- R-L4 R-L12
+caught    three turns can wait  <- R-L4
+caught    a turn is checked against the current direction only  <- R-L4
+caught    the right wall is one cell too far  <- R-L5 R-L10 R-L14
+caught    the top wall is missing  <- R-L5 R-L14
+caught    the tail cell counts as body  <- R-L6 R-L8
+caught    the body never kills  <- R-L6 R-L14
+caught    the grub never grows  <- R-L7 R-L11 R-L14
+caught    dew scores 11  <- R-L7 R-L11 R-L14 R-L15
+caught    a spore lives one tick longer  <- R-L8
+caught    a spore on its last tick cannot be eaten  <- R-L8
+caught    a second spore replaces the first  <- R-L8
+caught    a spore comes after every 4th dew  <- R-L8
+caught    the speed floor is 60 ms  <- R-L9
+caught    turns are not logged  <- R-L12
+caught    rejected turns are logged  <- R-L12
+caught    the generator is stuck  <- R-L1
+caught    the grub moves before the game starts  <- R-L3
+SURVIVED  dew can land on the spore
+caught    dew can land on the grub  <- R-L11 R-L14
+caught    a turn log with ticks going backwards is accepted  <- R-L12
+caught    a big seed is not wrapped at 2^32  <- R-L13
+SURVIVED  the state hash ignores the score
+caught    a full grid is not noticed  <- R-L11
+caught    step reports no eat event  <- R-L7 R-L11 R-L15
+caught    snapshot is not a copy  <- R-L15
+25/27 deliberate faults were caught by the unit tests

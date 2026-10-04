@@ -1,0 +1,224 @@
+version:  v2
+date:     2026-10-04T13:44:58Z
+commit:   7b5e4736802fabb383706f045da7a860977c2d82
+tree:     0 uncommitted change(s) outside evidence/
+node:     v20.20.2
+command:  ./check.sh
+----------------------------------------------------------------------
+== 1/4 unit tests (Node, no browser) ==
+TAP version 13
+# Subtest: R-L1 same seed and same turns give the same hash after every tick
+ok 1 - R-L1 same seed and same turns give the same hash after every tick
+  ---
+  duration_ms: 39.417965
+  ...
+# Subtest: R-L1 different seeds put the first dew in different places
+ok 2 - R-L1 different seeds put the first dew in different places
+  ---
+  duration_ms: 0.364937
+  ...
+# Subtest: R-L2 a new game has the documented starting state
+ok 3 - R-L2 a new game has the documented starting state
+  ---
+  duration_ms: 0.213964
+  ...
+# Subtest: R-L3 nothing moves while the game is ready
+ok 4 - R-L3 nothing moves while the game is ready
+  ---
+  duration_ms: 0.131219
+  ...
+# Subtest: R-L3 one step moves the head one cell and keeps the length
+ok 5 - R-L3 one step moves the head one cell and keeps the length
+  ---
+  duration_ms: 0.166864
+  ...
+# Subtest: R-L4 a turn takes effect on the next step
+ok 6 - R-L4 a turn takes effect on the next step
+  ---
+  duration_ms: 0.183207
+  ...
+# Subtest: R-L4 a reversal or a repeat of the current direction is rejected
+ok 7 - R-L4 a reversal or a repeat of the current direction is rejected
+  ---
+  duration_ms: 0.130645
+  ...
+# Subtest: R-L4 two turns can wait, a third is rejected, each is checked against the one before
+ok 8 - R-L4 two turns can wait, a third is rejected, each is checked against the one before
+  ---
+  duration_ms: 0.148685
+  ...
+# Subtest: R-L5 leaving the grid on any side ends the game with cause wall
+ok 9 - R-L5 leaving the grid on any side ends the game with cause wall
+  ---
+  duration_ms: 0.246097
+  ...
+# Subtest: R-L6 running into the body ends the game with cause self
+ok 10 - R-L6 running into the body ends the game with cause self
+  ---
+  duration_ms: 0.214713
+  ...
+# Subtest: R-L6 moving onto the cell the tail leaves is legal
+ok 11 - R-L6 moving onto the cell the tail leaves is legal
+  ---
+  duration_ms: 0.165828
+  ...
+# Subtest: R-L7 eating dew scores 10, grows by one and places new dew on a free cell
+ok 12 - R-L7 eating dew scores 10, grows by one and places new dew on a free cell
+  ---
+  duration_ms: 0.227952
+  ...
+# Subtest: R-L8 a spore appears after the 5th dew, lasts 40 ticks, then is gone
+ok 13 - R-L8 a spore appears after the 5th dew, lasts 40 ticks, then is gone
+  ---
+  duration_ms: 0.346278
+  ...
+# Subtest: R-L8 eating a spore scores 50 and does not grow
+ok 14 - R-L8 eating a spore scores 50 and does not grow
+  ---
+  duration_ms: 0.173467
+  ...
+# Subtest: R-L8 a spore on its last tick can still be eaten
+ok 15 - R-L8 a spore on its last tick can still be eaten
+  ---
+  duration_ms: 0.12586
+  ...
+# Subtest: R-L8 no second spore appears while one exists
+ok 16 - R-L8 no second spore appears while one exists
+  ---
+  duration_ms: 0.237025
+  ...
+# Subtest: R-L9 tick length starts at 150 ms, drops 8 ms per 3 dew, floor 70 ms
+ok 17 - R-L9 tick length starts at 150 ms, drops 8 ms per 3 dew, floor 70 ms
+  ---
+  duration_ms: 0.144311
+  ...
+# Subtest: R-L10 after game over, step and turn change nothing
+ok 18 - R-L10 after game over, step and turn change nothing
+  ---
+  duration_ms: 0.209454
+  ...
+# Subtest: R-L11 filling the grid ends the game with cause full
+ok 19 - R-L11 filling the grid ends the game with cause full
+  ---
+  duration_ms: 0.158631
+  ...
+# Subtest: R-L12 accepted turns are logged with their tick, rejected ones are not
+ok 20 - R-L12 accepted turns are logged with their tick, rejected ones are not
+  ---
+  duration_ms: 0.175351
+  ...
+# Subtest: R-L12 replay of seed and turn log reproduces the final state
+ok 21 - R-L12 replay of seed and turn log reproduces the final state
+  ---
+  duration_ms: 33.022627
+  ...
+# Subtest: R-L12 the turn log encodes to a URL-safe string and back
+ok 22 - R-L12 the turn log encodes to a URL-safe string and back
+  ---
+  duration_ms: 19.92525
+  ...
+# Subtest: R-L12 a malformed turn log is rejected
+ok 23 - R-L12 a malformed turn log is rejected
+  ---
+  duration_ms: 0.276976
+  ...
+# Subtest: R-L13 seed parsing
+ok 24 - R-L13 seed parsing
+  ---
+  duration_ms: 0.187518
+  ...
+# Subtest: R-L14 invariants hold on every tick of 100 games by the scripted player
+ok 25 - R-L14 invariants hold on every tick of 100 games by the scripted player
+  ---
+  duration_ms: 2235.305446
+  ...
+# Subtest: R-L14 invariants hold on every tick of 100 games with random input
+ok 26 - R-L14 invariants hold on every tick of 100 games with random input
+  ---
+  duration_ms: 6.202938
+  ...
+# Subtest: R-L15 step reports what happened and snapshot is a copy
+ok 27 - R-L15 step reports what happened and snapshot is a copy
+  ---
+  duration_ms: 0.191827
+  ...
+# Subtest: R-P1 every glyph is 3x5 and no two glyphs are the same
+ok 28 - R-P1 every glyph is 3x5 and no two glyphs are the same
+  ---
+  duration_ms: 1.286544
+  ...
+# Subtest: R-P1 every character of every game text, and every digit, has a glyph
+ok 29 - R-P1 every character of every game text, and every digit, has a glyph
+  ---
+  duration_ms: 0.232496
+  ...
+# Subtest: R-P1 text layout: width and lit cells
+ok 30 - R-P1 text layout: width and lit cells
+  ---
+  duration_ms: 0.586982
+  ...
+# Subtest: R-P2 every game event has a sound recipe inside the limits
+ok 31 - R-P2 every game event has a sound recipe inside the limits
+  ---
+  duration_ms: 0.270779
+  ...
+# Subtest: R-P3 key mapping
+ok 32 - R-P3 key mapping
+  ---
+  duration_ms: 0.332304
+  ...
+# Subtest: R-P3 swipe mapping
+ok 33 - R-P3 swipe mapping
+  ---
+  duration_ms: 0.142058
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2399.969608
+== 2/4 the committed dist/index.html is what the source builds to ==
+dist/index.html is up to date with src/ (26654 bytes)
+== 3/4 browser tests (headless Chromium against dist/index.html) ==
+test_R_B10_works_opened_from_disk (test_page.PageTests.test_R_B10_works_opened_from_disk) ... ok
+test_R_B1_loads_clean_and_draws (test_page.PageTests.test_R_B1_loads_clean_and_draws) ... ok
+test_R_B2_arrow_keys_do_not_restart_a_finished_game (test_page.PageTests.test_R_B2_arrow_keys_do_not_restart_a_finished_game) ... ok
+test_R_B2_keyboard_plays_from_ready_to_over_and_restarts (test_page.PageTests.test_R_B2_keyboard_plays_from_ready_to_over_and_restarts) ... ok
+test_R_B4_score_on_the_page_is_the_logic_score (test_page.PageTests.test_R_B4_score_on_the_page_is_the_logic_score) ... ok
+test_R_B5_same_seed_and_same_keys_give_the_same_run (test_page.PageTests.test_R_B5_same_seed_and_same_keys_give_the_same_run) ... ok
+test_R_B5_without_a_seed_each_game_gets_its_own_seed (test_page.PageTests.test_R_B5_without_a_seed_each_game_gets_its_own_seed) ... ok
+test_R_B7_no_network (test_page.PageTests.test_R_B7_no_network) ... ok
+test_R_B7_the_browser_blocks_a_request_if_one_is_tried (test_page.PageTests.test_R_B7_the_browser_blocks_a_request_if_one_is_tried) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 7.262s
+
+OK
+== 4/4 requirements named by a test ==
+R-L1    2 test(s)
+R-L2    1 test(s)
+R-L3    2 test(s)
+R-L4    3 test(s)
+R-L5    1 test(s)
+R-L6    2 test(s)
+R-L7    1 test(s)
+R-L8    4 test(s)
+R-L9    1 test(s)
+R-L10   1 test(s)
+R-L11   1 test(s)
+R-L12   4 test(s)
+R-L13   1 test(s)
+R-L14   2 test(s)
+R-L15   1 test(s)
+15/15 requirements (prefix R-L) are named by a test
+R-P1    3 test(s)
+R-P2    1 test(s)
+R-P3    2 test(s)
+3/3 requirements (prefix R-P) are named by a test
+ALL CHECKS PASSED
+----------------------------------------------------------------------
+exit code: 0

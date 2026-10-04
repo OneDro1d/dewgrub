@@ -9,19 +9,29 @@ import { dirname, join } from 'node:path';
 import { createGame, start, turn, step, stateHash, snapshot, encodeLog } from '../src/game.js';
 import { chooseDir } from '../tools/bot.mjs';
 import { createApp, LIMITS, ERROR_CODES, DEFAULT_PORT } from '../tools/serve.mjs';
+import * as service from '../tools/serve.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const FIELDS = ['seed', 'status', 'cause', 'score', 'dew', 'spores', 'length', 'ticks', 'hash'];
+// R-S10, the numbers of the rule itself: an error body and a log line are at most 512 bytes, and a value the
+// caller sent is shown up to 40 characters.
+const MAX_ERROR_BYTES = 512;
+const MAX_QUOTED = 40;
 
 let server;
 let base;
 const lines = []; // the service's log lines, as objects
+const rawLines = []; // the same lines, as the text the service wrote
 
 before(async () => {
   server = createApp({
-    log: (line) => lines.push(JSON.parse(line)),
-    // A route that fails inside the service, to see what a fault of the service itself looks like from outside.
-    extraApi: { '/api/test-fault': async () => { throw new Error('deliberate fault inside the service'); } },
+    log: (line) => { rawLines.push(line); lines.push(JSON.parse(line)); },
+    extraApi: {
+      // A route that fails inside the service, to see what a fault of the service itself looks like from outside.
+      '/api/test-fault': async () => { throw new Error('deliberate fault inside the service'); },
+      // A route that refuses with a far too long message, to see the last guard on the size of an error body.
+      '/api/test-long-refusal': async () => { throw new service.Refusal(400, 'bad_body', 'long '.repeat(2000)); },
+    },
   });
   await new Promise((done) => server.listen(0, '127.0.0.1', done));
   base = `http://127.0.0.1:${server.address().port}`;
@@ -346,4 +356,128 @@ test('R-S9 docs/API.md names every error code, both limits, and a curl example f
   for (const path of ['/api/replay', '/api/step']) {
     assert.match(doc, new RegExp(`curl[^\\n]*${path}`), `no curl example for ${path}`);
   }
+});
+
+// ---- R-S10 (added in v7): no error body and no log line grows with what the caller sent ----
+
+// A text of exactly `bytes` bytes: head, then `unit` repeated, then tail.
+function sized(head, unit, tail, bytes = LIMITS.bodyBytes) {
+  const room = bytes - Buffer.byteLength(head + tail);
+  const text = head + unit.repeat(Math.floor(room / Buffer.byteLength(unit))) + tail;
+  return text + ' '.repeat(bytes - Buffer.byteLength(text));
+}
+
+test('R-S10 on every error path, with the largest input, the error body and the log line stay within 512 bytes', async () => {
+  const q = (unit) => sized('{"seed":1,"log":"', unit, '"}');
+  // [expected code, expected status, path, method, body as sent, a piece of the input 41 characters long]
+  // The piece must be absent from the message and from the logged path: 40 characters may be shown, 41 never.
+  const cases = [
+    ['bad_log', 400, '/api/replay', 'POST', q('x'), 'x'.repeat(41)],
+    ['bad_log', 400, '/api/replay', 'POST', q('zz.'), 'zz.'.repeat(14).slice(0, 41)],
+    ['bad_log', 400, '/api/replay', 'POST', `{"seed":1,"log":"5R.${'3'.repeat(60000)}U"}`, '3'.repeat(41)],
+    ['bad_log', 400, '/api/replay', 'POST', `{"seed":1,"log":"5R.${'2'.repeat(60000)}"}`, '2'.repeat(41)],
+    // 42 here, not 41: the message puts its own quotation mark in front of the 40 it shows.
+    ['bad_log', 400, '/api/replay', 'POST', q('\\"'), '"'.repeat(42)],
+    ['bad_log', 400, '/api/replay', 'POST', q('\\u0001'), '\u0001'.repeat(41)],
+    ['bad_log', 400, '/api/replay', 'POST', q('\u{1F600}'), '\u{1F600}'.repeat(21).slice(0, 41)],
+    ['bad_log', 400, '/api/replay', 'POST', q('€'), '€'.repeat(41)],
+    ['bad_log', 400, '/api/step', 'POST', sized('{"seed":1,"ticks":1,"log":["', 'y', '"]}'), 'y'.repeat(41)],
+    ['bad_json', 400, '/api/replay', 'POST', 'j'.repeat(LIMITS.bodyBytes), 'j'.repeat(41)],
+    ['bad_body', 400, '/api/replay', 'POST', sized('["', 'b', '"]'), 'b'.repeat(41)],
+    ['missing_field', 400, '/api/replay', 'POST', sized('{"', 'k', '":1}'), 'k'.repeat(41)],
+    ['bad_seed', 400, '/api/replay', 'POST', sized('{"log":"","seed":"', 's', '"}'), 's'.repeat(41)],
+    ['bad_ticks', 400, '/api/step', 'POST', sized('{"seed":1,"log":"","ticks":"', 't', '"}'), 't'.repeat(41)],
+    ['bad_finish', 400, '/api/replay', 'POST', sized('{"seed":1,"log":"","finish":"', 'f', '"}'), 'f'.repeat(41)],
+    ['body_too_large', 400, '/api/replay', 'POST', 'o'.repeat(LIMITS.bodyBytes + 1), 'o'.repeat(41)],
+    ['body_too_large', 400, '/api/step', 'POST', 'o'.repeat(4 * LIMITS.bodyBytes), 'o'.repeat(41)],
+    ['not_found', 404, `/api/${'n'.repeat(8000)}`, 'POST', q('x'), 'n'.repeat(41)],
+    ['not_found', 404, `/${'m'.repeat(8000)}`, 'GET', undefined, 'm'.repeat(41)],
+    ['not_found', 404, `/${'%E2%82%AC'.repeat(1500)}`, 'GET', undefined, '€'.repeat(41)],
+    ['not_found', 404, `/${'%22'.repeat(3000)}`, 'GET', undefined, '"'.repeat(41)],
+    ['not_found', 404, `/${'%01'.repeat(3000)}`, 'GET', undefined, '\u0001'.repeat(41)],
+    ['not_found', 404, `/${'%F0%9F%98%80'.repeat(1000)}`, 'GET', undefined, '\u{1F600}'.repeat(21).slice(0, 41)],
+    ['method_not_allowed', 405, '/api/replay', 'GET', undefined, null],
+    // An encoded slash reaches the file lookup as a slash, so this long path is the page, asked for with POST.
+    ['method_not_allowed', 405, `/${'a'.repeat(8000)}%2f..%2findex.html`, 'POST', q('x'), 'a'.repeat(41)],
+    ['method_not_allowed', 405, `/${'%01'.repeat(3000)}%2f..%2findex.html`, 'DELETE', undefined, '\u0001'.repeat(41)],
+    ['internal_error', 500, '/api/test-fault', 'POST', q('x'), 'x'.repeat(41)],
+    ['bad_body', 400, '/api/test-long-refusal', 'POST', '{}', 'long '.repeat(9).slice(0, 41)],
+  ];
+  rawLines.length = 0;
+  const seen = new Set();
+  for (let i = 0; i < cases.length; i++) {
+    const [code, status, path, method, raw, piece] = cases[i];
+    const label = `case ${i}: ${code} ${method} ${path.slice(0, 30)}`;
+    const id = `big-${i}`;
+    const r = await call(path, null, { method, raw, headers: { 'X-Request-Id': id } });
+    assert.equal(r.status, status, label);
+    assert.ok(r.json, `${label}: the body is not JSON`);
+    assert.equal(r.json.error, code, label);
+    assert.deepEqual(Object.keys(r.json).sort(), ['error', 'message'], label);
+    assert.ok(typeof r.json.message === 'string' && r.json.message.length > 5, label);
+    const bytes = Buffer.byteLength(r.text);
+    assert.ok(bytes <= MAX_ERROR_BYTES, `${label}: the error body is ${bytes} bytes`);
+    if (piece) assert.ok(!r.json.message.includes(piece), `${label}: the message repeats 41 characters of the input`);
+    const mine = rawLines.filter((l) => JSON.parse(l).id === id);
+    assert.equal(mine.length, 1, `${label}: log lines`);
+    const lineBytes = Buffer.byteLength(mine[0]);
+    assert.ok(lineBytes <= MAX_ERROR_BYTES, `${label}: the log line is ${lineBytes} bytes`);
+    if (piece) assert.ok(!JSON.parse(mine[0]).path.includes(piece), `${label}: the log line repeats 41 characters of the input`);
+    assert.equal(JSON.parse(mine[0]).status, status, label);
+    seen.add(code);
+  }
+  assert.deepEqual([...seen].sort(), [...ERROR_CODES].sort(), 'every error code has a largest-input case');
+});
+
+test('R-S10 a rejected value is quoted up to 40 characters, then "…", and a short one is quoted whole', async () => {
+  assert.deepEqual(service.ERROR_LIMITS, { bodyBytes: MAX_ERROR_BYTES, quoted: MAX_QUOTED });
+  const message = async (log) => (await call('/api/replay', { seed: 1, log })).json.message;
+  const long = await message('a'.repeat(41));
+  assert.ok(long.includes(`"${'a'.repeat(40)}…"`), long);
+  assert.ok(!long.includes('a'.repeat(41)), long);
+  const exact = await message('a'.repeat(40));
+  assert.ok(exact.includes(`"${'a'.repeat(40)}"`), exact);
+  assert.ok(!exact.includes('…'), exact);
+  assert.ok((await message('up')).includes('"up"'));
+  // The message names the entry the logic rejected, not the start of the log.
+  const second = await message('5R.3U');
+  assert.ok(second.includes('"3U"') && !second.includes('5R'), second);
+  const far = await message(`0D.${'7R.'.repeat(500)}${'q'.repeat(300)}`);
+  assert.ok(far.includes(`"${'q'.repeat(40)}…"`), far);
+  // A path is cut the same way, in the message and in the log line.
+  rawLines.length = 0;
+  const r = await call(`/${'a'.repeat(100)}%2f..%2findex.html`, {}, { headers: { 'X-Request-Id': 'cut-1' } });
+  assert.equal(r.status, 405);
+  assert.ok(r.json.message.startsWith(`/${'a'.repeat(39)}… `), r.json.message);
+  await call(`/${'n'.repeat(100)}`, null, { method: 'GET', headers: { 'X-Request-Id': 'cut-2' } });
+  await call(`/${'n'.repeat(39)}`, null, { method: 'GET', headers: { 'X-Request-Id': 'cut-3' } });
+  const paths = Object.fromEntries(rawLines.map((l) => JSON.parse(l)).map((l) => [l.id, l.path]));
+  assert.deepEqual(paths, { 'cut-1': `/${'a'.repeat(39)}…`, 'cut-2': `/${'n'.repeat(39)}…`, 'cut-3': `/${'n'.repeat(39)}` });
+});
+
+test('R-S10 a refusal with a far too long message still answers within 512 bytes, with its code', async () => {
+  const r = await call('/api/test-long-refusal', {});
+  assert.equal(r.status, 400);
+  assert.deepEqual(Object.keys(r.json).sort(), ['error', 'message']);
+  assert.equal(r.json.error, 'bad_body');
+  assert.ok(Buffer.byteLength(r.text) <= MAX_ERROR_BYTES, `${Buffer.byteLength(r.text)} bytes`);
+  assert.ok(r.json.message.length > 5 && !r.json.message.includes('long long'), r.json.message);
+});
+
+test('R-S10 a wrong PORT is refused at the start with a short message, however long the value', async () => {
+  const child = spawn('node', [join(root, 'tools', 'serve.mjs')], { env: { ...process.env, PORT: '9'.repeat(5000) } });
+  let err = '';
+  child.stderr.on('data', (d) => { err += d; });
+  const timer = setTimeout(() => child.kill('SIGKILL'), 10000);
+  const code = await new Promise((done) => child.on('exit', done));
+  clearTimeout(timer);
+  assert.equal(code, 2);
+  assert.ok(err.includes(`"${'9'.repeat(40)}…"`), err.slice(0, 200));
+  assert.ok(Buffer.byteLength(err) <= MAX_ERROR_BYTES, `${Buffer.byteLength(err)} bytes on standard error`);
+});
+
+test('R-S10 docs/API.md states the 512-byte limit and the 40-character cut', () => {
+  const doc = readFileSync(join(root, 'docs', 'API.md'), 'utf8');
+  assert.match(doc, /at most \*\*512\*\* bytes/);
+  assert.match(doc, /\*\*40\*\* characters/);
 });

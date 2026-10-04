@@ -196,11 +196,13 @@ export function encodeLog(log) {
 export function decodeLog(text) {
   if (text === '') return [];
   let prev = 0;
+  // The error carries the rejected entry as `entry`, so a caller can show a part of it instead of all of it.
+  const reject = (why, part) => Object.assign(new Error(`${why}: "${part}"`), { entry: part });
   return String(text).split('.').map((part) => {
     const m = /^([0-9a-z]+)([UDLR])$/.exec(part);
-    if (!m) throw new Error(`bad turn log entry: "${part}"`);
+    if (!m) throw reject('bad turn log entry', part);
     const t = parseInt(m[1], 36);
-    if (!Number.isSafeInteger(t) || t < prev) throw new Error(`bad tick in turn log entry: "${part}"`);
+    if (!Number.isSafeInteger(t) || t < prev) throw reject('bad tick in turn log entry', part);
     prev = t;
     return { t, d: m[2] };
   });

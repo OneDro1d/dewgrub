@@ -420,6 +420,10 @@ test('R-L12 a malformed turn log is rejected', () => {
   for (const bad of ['zz', '5', 'R', '5R.3U', '5R..6U', '5X', '-1R', '5r', ' 5R']) {
     assert.throws(() => decodeLog(bad), undefined, bad);
   }
+  // The error names the entry that was rejected, on its own, so a caller can show a part of it (v7).
+  for (const [bad, entry] of [['zz', 'zz'], ['5R.3U', '3U'], ['0D.5X.9L', '5X'], ['5R..6U', ''], ['1U.zzzzzzzzzzzzzzzzzzzzR', 'zzzzzzzzzzzzzzzzzzzzR']]) {
+    assert.throws(() => decodeLog(bad), (e) => e.entry === entry, bad);
+  }
 });
 
 test('R-L13 seed parsing', () => {

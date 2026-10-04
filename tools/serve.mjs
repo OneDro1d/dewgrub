@@ -20,7 +20,11 @@ export const ERROR_CODES = [
 ];
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
 
-class Refusal extends Error {
+// No error body and no log line grows with what the caller sent: both are at most bodyBytes bytes, and a value
+// from the caller is shown up to `quoted` characters, then "…".
+export const ERROR_LIMITS = { bodyBytes: 512, quoted: 40 };
+
+export class Refusal extends Error {
   constructor(status, code, message, headers = {}) {
     super(message);
     this.status = status;
@@ -29,6 +33,10 @@ class Refusal extends Error {
   }
 }
 const bad = (code, message) => new Refusal(400, code, message);
+const clip = (value) => {
+  const text = String(value);
+  return text.length > ERROR_LIMITS.quoted ? `${text.slice(0, ERROR_LIMITS.quoted)}…` : text;
+};
 
 // Reads the whole body, or refuses once it is larger than the limit.
 function readBody(req) {
@@ -66,7 +74,7 @@ function parseRequest(text, needsTicks) {
   }
   if (typeof body.log !== 'string') throw bad('bad_log', 'log must be a string, for example "0D.7R"');
   let log;
-  try { log = decodeLog(body.log); } catch (e) { throw bad('bad_log', `the game logic rejects this turn log: ${e.message}`); }
+  try { log = decodeLog(body.log); } catch (e) { throw bad('bad_log', `the game logic rejects this turn log, at the entry "${clip(e.entry)}"`); }
   let ticks = null;
   if (needsTicks) {
     ticks = body.ticks;
@@ -140,7 +148,7 @@ async function answer(req, path, distDir, api) {
   if (path === '/api' || path.startsWith('/api/')) throw new Refusal(404, 'not_found', 'no such path');
   const file = await staticFile(distDir, path);
   if (req.method !== 'GET' && req.method !== 'HEAD') {
-    throw new Refusal(405, 'method_not_allowed', `${path} takes GET or HEAD`, { Allow: 'GET, HEAD' });
+    throw new Refusal(405, 'method_not_allowed', `${clip(path)} takes GET or HEAD`, { Allow: 'GET, HEAD' });
   }
   return { status: 200, type: file.type, body: file.body };
 }
@@ -164,7 +172,10 @@ export function createApp({ distDir = join(root, 'dist'), log = (line) => proces
       // Anything that is not a refusal of the request is a fault of the service: say so, and keep serving.
       const r = e instanceof Refusal ? e : new Refusal(500, 'internal_error', 'the service failed on this request');
       req.resume(); // drop whatever body is left unread
-      out = { status: r.status, type: TYPES['.json'], body: JSON.stringify({ error: r.code, message: r.message }), headers: r.headers };
+      let body = JSON.stringify({ error: r.code, message: r.message });
+      // The last guard: whatever a message was built from, the body stays within the limit.
+      if (Buffer.byteLength(body) > ERROR_LIMITS.bodyBytes) body = JSON.stringify({ error: r.code, message: 'the request was refused' });
+      out = { status: r.status, type: TYPES['.json'], body, headers: r.headers };
     }
     res.writeHead(out.status, {
       'Content-Type': out.type, 'Content-Length': Buffer.byteLength(out.body), 'Cache-Control': 'no-store',
@@ -172,7 +183,7 @@ export function createApp({ distDir = join(root, 'dist'), log = (line) => proces
     });
     res.end(req.method === 'HEAD' ? undefined : out.body);
     const ms = Number(process.hrtime.bigint() - began) / 1e6;
-    log(JSON.stringify({ time: new Date().toISOString(), id, method: req.method, path, status: out.status, ms: Math.round(ms * 1000) / 1000 }));
+    log(JSON.stringify({ time: new Date().toISOString(), id, method: req.method, path: clip(path), status: out.status, ms: Math.round(ms * 1000) / 1000 }));
   });
 }
 
@@ -180,7 +191,7 @@ export function createApp({ distDir = join(root, 'dist'), log = (line) => proces
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = process.env.PORT === undefined || process.env.PORT === '' ? DEFAULT_PORT : Number(process.env.PORT);
   if (!Number.isInteger(port) || port < 0 || port > 65535) {
-    console.error(`PORT must be a number from 0 to 65535, not "${process.env.PORT}"`);
+    console.error(`PORT must be a number from 0 to 65535, not "${clip(process.env.PORT)}"`);
     process.exit(2);
   }
   // DEWGRUB_DIST serves another build of the page (the tests use it for deliberately broken pages).

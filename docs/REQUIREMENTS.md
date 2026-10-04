@@ -69,6 +69,7 @@ is one step of the game clock. The **turn log** is the list of accepted turns, e
 | R-S7 | Stateless: the same request gets the same response body, byte for byte, alone, repeated, and among concurrent other requests. |
 | R-S8 | The built page is served at `/` byte for byte. The service listens on `127.0.0.1` only, on the port from `PORT` (default 8787), and stops on SIGTERM. |
 | R-S9 | `docs/API.md` names every error code and both limits and has a curl example for each endpoint. |
+| R-S10 | No error grows with the input (added in v7, after the first outside test found a 65611-byte error body). Every error body is at most 512 bytes, on every error path, with the largest input the service reads. A value from the request is shown up to 40 characters, then `…`. The log line is at most 512 bytes too, cuts its path the same way and never carries the body. The same cut applies to the message for a wrong `PORT`. |
 
 ## Player rules (added in v6; run in Node against a FAKE model server, never the real one)
 

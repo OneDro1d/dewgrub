@@ -110,11 +110,17 @@ changes nothing (there is nothing to change: the service keeps no state).
 Checks are made in this order: size, JSON, object, missing fields, seed, log, ticks, finish. So a body with a bad
 seed and a bad log answers `bad_seed`.
 
+An error never grows with what was sent. Every error body is at most **512** bytes. Where a message shows a value
+from the request (the rejected entry of a turn log, a path), it shows the first **40** characters, then `…`:
+
+    {"error":"bad_log","message":"the game logic rejects this turn log, at the entry \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…\""}
+
 ## Limits
 
 - `ticks`: 0 to **100000**.
 - Body: at most **65536** bytes.
 - `seed`: 0 to 4294967295. The page accepts larger numbers and wraps them; the API does not, it answers `bad_seed`.
+- Error body: at most **512** bytes. Log line: at most 512 bytes.
 
 ## Request ids and the log
 
@@ -125,7 +131,8 @@ The service writes one JSON line per request on its standard output:
 
     {"time":"2026-10-04T16:00:00.000Z","id":"Run-42","method":"POST","path":"/api/step","status":200,"ms":0.412}
 
-`path` is the path without the query string. `ms` is the time the request took, in milliseconds. When it starts it
+`path` is the path without the query string, cut after 40 characters with `…` like a value in an error message. The
+line never carries the body of the request. `ms` is the time the request took, in milliseconds. When it starts it
 writes one line of another kind: `{"time":"…","event":"listening","host":"127.0.0.1","port":8787}`.
 
 ## Other response headers

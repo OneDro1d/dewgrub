@@ -124,3 +124,16 @@ with a no-reply address, kept every date and message, moved the tags, and droppe
 repository. Every commit id changed, so it was done once, after the last code of v6, and the evidence that quotes
 ids was regenerated afterwards. A test (R-B16) now fails if any commit carries another identity. Rejected:
 publishing one fresh commit with no history (it would lose the commit times that make "one sitting" checkable).
+
+## D17 — No error grows with the input (4 Oct 2026, v7)
+
+The first run of somebody else's scenarios against the v6 service found that a 65536-byte body with a garbage turn
+log got a 65611-byte error: the message repeated the whole rejected entry. Rule R-S10: an error body is at most 512
+bytes, and a value from the request is shown up to 40 characters, then `…`. Looking at every error path, not only
+that one, found two more of the same kind: the 405 message repeated the path (a long path with an encoded slash
+that resolves to the page), and the log line carried the whole path, up to the 16 kB Node allows. All three are
+cut the same way. The game logic's error now carries the rejected entry as a field (`entry`), so the service shows
+that entry and does not have to take a message apart; the logic's rules did not change. A last guard at the one
+place every error leaves the service replaces any body over 512 bytes with a fixed message: the cut is the rule,
+the guard is for a message somebody adds later. Rejected: cutting the whole message at 512 bytes (it could cut
+through the JSON or leave half a sentence), and leaving the value out (the caller then has to guess which entry).

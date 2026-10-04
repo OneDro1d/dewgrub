@@ -39,6 +39,7 @@ const MUTANTS = [
   ['a full grid is not noticed', "if (!g.dew) return end(g, 'full', events);", ''],
   ['step reports no eat event', "events.push('eat');", ''],
   ['snapshot is not a copy', 'const copy = JSON.parse(JSON.stringify(g));', 'const copy = g;'],
+  ['the error for a bad turn log does not name the rejected entry', '{ entry: part }', '{}'],
 ];
 
 // [what is broken, text in tools/serve.mjs, replacement]
@@ -50,7 +51,7 @@ const SERVICE = [
   ['a seed above 2^32 - 1 is accepted', ' || body.seed > 4294967295', ''],
   ['negative ticks are accepted', 'ticks < 0 || ', ''],
   ['there is no limit on ticks', ' || ticks > LIMITS.ticks', ''],
-  ['a turn log the logic rejects is played as an empty log', "catch (e) { throw bad('bad_log', `the game logic rejects this turn log: ${e.message}`); }", 'catch (e) { log = []; }'],
+  ['a turn log the logic rejects is played as an empty log', "catch (e) { throw bad('bad_log', `the game logic rejects this turn log, at the entry \"${clip(e.entry)}\"`); }", 'catch (e) { log = []; }'],
   ['a missing field is taken as zero', "if (!Object.prototype.hasOwnProperty.call(body, field)) throw bad('missing_field', `the field \"${field}\" is missing`);", 'if (!Object.prototype.hasOwnProperty.call(body, field)) body[field] = field === \'log\' ? \'\' : 0;'],
   ['a JSON array is accepted as a body', ' || Array.isArray(body)', ''],
   ['the body size limit is not enforced', 'if (size > LIMITS.bodyBytes) {', 'if (false) {'],
@@ -59,7 +60,7 @@ const SERVICE = [
   ['any text is accepted as a request id', '/^[A-Za-z0-9-]{1,64}$/.test(sent)', 'sent.length > 0'],
   ['GET on an API path is not refused', "if (req.method !== 'POST') throw new Refusal(405, 'method_not_allowed', `${path} takes POST`, { Allow: 'POST' });", ''],
   ['POST on the page is not refused', "if (req.method !== 'GET' && req.method !== 'HEAD') {", 'if (false) {'],
-  ['the log line carries the query string', 'method: req.method, path, status: out.status', 'method: req.method, path: req.url, status: out.status'],
+  ['the log line carries the query string', 'method: req.method, path: clip(path), status: out.status', 'method: req.method, path: clip(req.url), status: out.status'],
   ['the log line has no duration', ', ms: Math.round(ms * 1000) / 1000 }', ' }'],
   ['the spore\'s ticks left are not reported', 'ticksLeft: g.spore.ttl', 'ticksLeft: 0'],
   ['score reports the dew count', 'score: g.score, dew: g.dewEaten', 'score: g.dewEaten, dew: g.dewEaten'],
@@ -67,6 +68,16 @@ const SERVICE = [
   ['files outside dist/ can be read', "if (wanted !== distDir && !wanted.startsWith(distDir + sep)) throw new Refusal(404, 'not_found', 'no such path');", ''],
   ['the service remembers the last game', 'const g = createGame(seed);\n  start(g);\n  const until', 'const g = (play.last = play.last || createGame(seed));\n  start(g);\n  const until'],
   ['a service fault takes the whole service down', "const r = e instanceof Refusal ? e : new Refusal(500, 'internal_error', 'the service failed on this request');", 'if (!(e instanceof Refusal)) throw e;\n      const r = e;'],
+  // v7, rule R-S10: no error grows with the input.
+  ['the error message repeats the whole rejected entry', 'at the entry "${clip(e.entry)}"', 'at the entry "${e.entry}"'],
+  ['the error message shows the start of the log, not the rejected entry', 'at the entry "${clip(e.entry)}"', 'at the entry "${clip(body.log)}"'],
+  ['a value is cut after 80 characters, not 40', 'bodyBytes: 512, quoted: 40 }', 'bodyBytes: 512, quoted: 80 }'],
+  ['an error body may be 2048 bytes', 'bodyBytes: 512, quoted: 40 }', 'bodyBytes: 2048, quoted: 40 }'],
+  ['a cut value does not end in "…"', '${text.slice(0, ERROR_LIMITS.quoted)}…`', '${text.slice(0, ERROR_LIMITS.quoted)}`'],
+  ['the last guard on the size of an error body is missing', 'if (Buffer.byteLength(body) > ERROR_LIMITS.bodyBytes) body = ', 'if (false) body = '],
+  ['the 405 message repeats the whole path', '`${clip(path)} takes GET or HEAD`', '`${path} takes GET or HEAD`'],
+  ['the log line carries the whole path', 'path: clip(path), status', 'path, status'],
+  ['the message for a wrong PORT repeats the whole value', 'not "${clip(process.env.PORT)}"', 'not "${process.env.PORT}"'],
 ];
 
 // [what is broken, text in tools/jev-player.mjs, replacement]

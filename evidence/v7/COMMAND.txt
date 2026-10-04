@@ -1,0 +1,5 @@
+Every file in this folder names, in its first lines, the commit and the command that produced it.
+check-output.txt: tools/evidence.sh v7  (a fresh git clone into a temporary folder, then ./check.sh ).
+red-error-size.txt: tools/red-proof.sh v7 v6 test/service.test.mjs red-error-size.txt (a fresh git clone of tag v6
+with the service tests of tag v7 put on top, then those tests; the run must fail, and it does: exit code 1).
+Output is unedited, except that folder names of the machine are shown as <checkout>, <python> and <home>.

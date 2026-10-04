@@ -1,0 +1,473 @@
+version:      v7
+tree:         v6 (ae75193326df91082ba6b137b617fef70de48212), a fresh clone
+test file:    test/service.test.mjs as it is at v7 (3d34036f3c1515d440dc271e1dca7b494df5def2)
+date:         2026-10-04T17:51:26Z, by tools/red-proof.sh
+node:         v20.20.2
+command:      node --test --test-reporter=spec test/service.test.mjs
+expected:     the command should fail: the old tree does not obey the new rule
+shown as:     <checkout> = the temporary clone, <home> = the home folder
+----------------------------------------------------------------------
+✔ R-S1 the service imports the game logic the page is built from, and holds no copy of the rules (2.822728ms)
+✔ R-S1 for 40 seeded games the service ends in the same state as the logic (331.652828ms)
+✔ R-S2 replay answers with exactly the documented fields (1.369774ms)
+✔ R-S2 replay runs the log to its end and says when the game is still running (1.895687ms)
+✔ R-S2 replay stops at game over when the log runs into it (1.211651ms)
+✔ R-S2 replay with finish:true goes on straight to game over, as the page replay does (9.528929ms)
+✔ R-S3 step answers after exactly n ticks, with the state a player needs (2.353962ms)
+✔ R-S3 step does not apply turns logged at tick n or later (2.857217ms)
+✔ R-S3 step stops at game over and reports the tick it happened on (1.190145ms)
+✔ R-S3 step shows the spore with its ticks left (1.849225ms)
+✔ R-S4 every malformed request gets 400 with its error code and a message (23.191525ms)
+✔ R-S4 a fault inside the service answers 500 internal_error, leaks nothing, and the service keeps serving (2.680697ms)
+✔ R-S4 the limits: the largest allowed ticks and body are accepted (2.125913ms)
+✔ R-S4 a malformed request changes nothing: the same good request answers the same before and after (4.342609ms)
+✔ R-S5 unknown paths get 404 and wrong methods get 405, both as JSON errors (15.339925ms)
+✔ R-S6 the caller's X-Request-Id comes back, and an invalid or missing one is replaced (8.909077ms)
+✔ R-S6 one JSON log line per request, with the id, the path, the status and the duration (2.443346ms)
+✔ R-S7 stateless: the same request gives the same body, alone, repeated and among 60 concurrent others (79.177809ms)
+✔ R-S8 the page is served at / exactly as built, and nothing outside dist/ is served (3.744958ms)
+✔ R-S8 started as a program it listens on 127.0.0.1 and the port from PORT, logs to stdout and stops on SIGTERM (41.12229ms)
+✔ R-S9 docs/API.md names every error code, both limits, and a curl example for each endpoint (0.328403ms)
+✖ R-S10 on every error path, with the largest input, the error body and the log line stay within 512 bytes (3.720877ms)
+  AssertionError [ERR_ASSERTION]: case 0: bad_log POST /api/replay: the error body is 65611 bytes
+      at TestContext.<anonymous> (file://<checkout>/test/service.test.mjs:419:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async Test.run (node:internal/test_runner/test:797:9)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:526:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '=='
+  }
+
+✖ R-S10 a rejected value is quoted up to 40 characters, then "…", and a short one is quoted whole (1.81664ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + undefined
+  - {
+  -   bodyBytes: 512,
+  -   quoted: 40
+  - }
+      at TestContext.<anonymous> (file://<checkout>/test/service.test.mjs:433:10)
+      at Test.runInAsyncScope (node:async_hooks:206:9)
+      at Test.run (node:internal/test_runner/test:796:25)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:526:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { bodyBytes: 512, quoted: 40 },
+    operator: 'deepStrictEqual'
+  }
+
+✖ R-S10 a refusal with a far too long message still answers within 512 bytes, with its code (2.000704ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  500 !== 400
+  
+      at TestContext.<anonymous> (file://<checkout>/test/service.test.mjs:460:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async Test.run (node:internal/test_runner/test:797:9)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:526:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 400,
+    operator: 'strictEqual'
+  }
+
+✖ R-S10 a wrong PORT is refused at the start with a short message, however long the value (33.227735ms)
+  AssertionError [ERR_ASSERTION]: PORT must be a number from 0 to 65535, not "999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+      at TestContext.<anonymous> (file://<checkout>/test/service.test.mjs:475:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async Test.run (node:internal/test_runner/test:797:9)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:526:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '=='
+  }
+
+✖ R-S10 docs/API.md states the 512-byte limit and the 40-character cut (1.039719ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /at most \*\*512\*\* bytes/. Input:
+  
+  '# The local service and its API\n' +
+    '\n' +
+    '`tools/serve.mjs` is a small HTTP service around the game logic, made so that a test harness (or a player script,\n' +
+    "or a model) can drive the game over HTTP instead of through a browser. It uses Node's built-in modules only, and it\n" +
+    'imports the same `src/game.js` the page is built from. There is no second copy of the rules.\n' +
+    '\n' +
+    '    node tools/serve.mjs              # http://127.0.0.1:8787\n' +
+    '    PORT=9000 node tools/serve.mjs    # another port; PORT=0 lets the system pick one\n' +
+    '\n' +
+    'It listens on `127.0.0.1` only. It is not meant to be put on the internet. Stop it with Ctrl-C (or SIGTERM).\n' +
+    '\n' +
+    '## What it serves\n' +
+    '\n' +
+    '| path | method | what |\n' +
+    '|---|---|---|\n' +
+    '| `/` and `/index.html` | GET, HEAD | the built game page, `dist/index.html`, byte for byte |\n' +
+    '| `/api/replay` | POST | play a seed and a turn log to the end of the log, return the result |\n' +
+    '| `/api/step` | POST | play a seed and a turn log for exactly n ticks, return the result and the board |\n' +
+    '\n' +
+    'Everything else is `404`. A wrong method on a known path is `405` with an `Allow` header.\n' +
+    '\n' +
+    'The service is **stateless**: it keeps nothing between requests, and the same request always gets the same response\n' +
+    'body, byte for byte.\n' +
+    '\n' +
+    '## The turn log\n' +
+    '\n' +
+    'The same text the page puts in its replay address (`?seed=123&replay=0D.7R`). Each entry is a tick number in base 36\n' +
+    '(digits and lower-case letters) followed by one direction letter, `U`, `D`, `L` or `R`; entries are joined by dots,\n' +
+    'in order of tick. `0D.7R` means: turn down before the first tick, turn right once 7 ticks have been played. An empty\n' +
+    'string is a game with no turns. Tick 36 is written `10`.\n' +
+    '\n' +
+    'A turn the game does not accept (a reversal, a repeat of the current direction, a third turn while two are waiting)\n' +
+    'is skipped, exactly as the page skips it. That is not an error. A log that is malformed is an error (`bad_log`).\n' +
+    '\n' +
+    '## POST /api/replay\n' +
+    '\n' +
+    'Body: `{"seed": <integer 0 to 4294967295>, "log": "<turn log>"}`. Optional: `"finish": true`.\n' +
+    '\n' +
+    'The game is played until **one tick after the last logged turn**, or until game over if that comes first. A game\n' +
+    'that is still running then says `"status": "playing"`. An empty log plays 0 ticks.\n' +
+    '\n' +
+    'With `"finish": true` the grub then keeps going straight until the game is over. That is what the page\'s replay does,\n' +
+    "so with `finish` the result is the result the page's replay address ends on.\n" +
+    '\n' +
+    `    curl -s -X POST http://127.0.0.1:8787/api/replay -d '{"seed": 123, "log": "0D.7R"}'\n` +
+    '\n' +
+    '    {"seed":123,"status":"playing","cause":null,"score":0,"dew":0,"spores":0,"length":3,"ticks":8,"hash":"…"}\n' +
+    '\n' +
+    `    curl -s -X POST http://127.0.0.1:8787/api/replay -d '{"seed": 123, "log": "0D.7R", "finish": true}'\n` +
+    '\n' +
+    '    {"seed":123,"status":"over","cause":"wall","score":10,"dew":1,"spores":0,"length":4,"ticks":…,"hash":"…"}\n' +
+    '\n' +
+    '| field | meaning |\n' +
+    '|---|---|\n' +
+    '| `seed` | the seed, as sent |\n' +
+    '| `status` | `"playing"` or `"over"` |\n' +
+    '| `cause` | `null` while playing; `"wall"`, `"self"` or `"full"` when over |\n' +
+    '| `score` | 10 per dew, 50 per spore |\n' +
+    '| `dew` | dew eaten |\n' +
+    '| `spores` | spores eaten |\n' +
+    '| `length` | cells of the grub |\n' +
+    '| `ticks` | ticks played |\n' +
+    '| `hash` | 8 hex digits, a hash of the whole game state; two games with the same hash are in the same state |\n' +
+    '\n' +
+    '## POST /api/step\n' +
+    '\n' +
+    'Body: `{"seed": <integer>, "log": "<turn log>", "ticks": <integer 0 to 100000>}`.\n' +
+    '\n' +
+    'The game is played for **exactly `ticks` ticks**, or until game over if that comes first (`ticks` in the answer is\n' +
+    'then the tick the game ended on). Turns logged at tick `ticks` or later are in the future and are not applied.\n' +
+    '\n' +
+    'The answer has the fields of `/api/replay` plus `state`, which is what a player needs to choose the next turn:\n' +
+    '\n' +
+    `    curl -s -X POST http://127.0.0.1:8787/api/step -d '{"seed": 123, "log": "0D", "ticks": 3}'\n` +
+    '\n' +
+    '    {"seed":123,"status":"playing","cause":null,"score":0,"dew":0,"spores":0,"length":3,"ticks":3,"hash":"…",\n' +
+    '     "state":{"cols":20,"rows":20,"dir":"D",\n' +
+    '              "grub":[{"x":10,"y":13},{"x":10,"y":12},{"x":10,"y":11}],\n' +
+    '              "dew":{"x":17,"y":17},"spore":null}}\n' +
+    '\n' +
+    '| field of `state` | meaning |\n' +
+    '|---|---|\n' +
+    '| `cols`, `rows` | the size of the grid; `x` runs 0 to `cols`-1 left to right, `y` runs 0 to `rows`-1 top to bottom |\n' +
+    '| `dir` | the direction the grub is moving: `U`, `D`, `L` or `R` |\n' +
+    '| `grub` | the cells of the grub, head first |\n' +
+    '| `dew` | the cell of the dew (or `null` when the grid is full) |\n' +
+    '| `spore` | `null`, or `{"x", "y", "ticksLeft"}`: the gold spore and how many ticks it will stay |\n' +
+    '\n' +
+    'To play: ask for the state after n ticks, choose a turn, add `<n in base 36><letter>` to the log, ask for n+1.\n' +
+    '\n' +
+    '## Errors\n' +
+    '\n' +
+    'Every error has the body `{"error": "<code>", "message": "<a sentence for a person>"}`. A request that gets an error\n' +
+    'changes nothing (there is nothing to change: the service keeps no state).\n' +
+    '\n' +
+    '| status | code | when |\n' +
+    '|---|---|---|\n' +
+    '| 400 | `bad_json` | the body is not valid JSON (an empty body too) |\n' +
+    '| 400 | `bad_body` | the body is JSON but not an object |\n' +
+    '| 400 | `missing_field` | `seed` or `log` is missing, or `ticks` on `/api/step` |\n' +
+    '| 400 | `bad_seed` | `seed` is not an integer from 0 to 4294967295 (a number in a string is not an integer) |\n' +
+    '| 400 | `bad_log` | `log` is not a string, or the game logic rejects it as a turn log |\n' +
+    '| 400 | `bad_ticks` | `ticks` is not an integer from 0 to 100000 |\n' +
+    '| 400 | `bad_finish` | `finish` is present and not `true` or `false` |\n' +
+    '| 400 | `body_too_large` | the body is larger than 65536 bytes |\n' +
+    '| 404 | `not_found` | no such path |\n' +
+    '| 405 | `method_not_allowed` | the path exists but not with this method; see the `Allow` header |\n' +
+    '| 500 | `internal_error` | a fault of the service itself. The message never carries the inner error. The tests found no real request that causes it; they provoke it through a failing route that only the test adds. |\n' +
+    '\n' +
+    'Checks are made in this order: size, JSON, object, missing fields, seed, log, ticks, finish. So a body with a bad\n' +
+    'seed and a bad log answers `bad_seed`.\n' +
+    '\n' +
+    '## Limits\n' +
+    '\n' +
+    '- `ticks`: 0 to **100000**.\n' +
+    '- Body: at most **65536** bytes.\n' +
+    '- `seed`: 0 to 4294967295. The page accepts larger numbers and wraps them; the API does not, it answers `bad_seed`.\n' +
+    '\n' +
+    '## Request ids and the log\n' +
+    '\n' +
+    'Every response carries `X-Request-Id`. If the request sent an `X-Request-Id` made of letters, digits and `-`, 1 to 64\n' +
+    'characters long, that value comes back. Otherwise the service makes a new one.\n' +
+    '\n' +
+    'The service writes one JSON line per request on its standard output:\n' +
+    '\n' +
+    '    {"time":"2026-10-04T16:00:00.000Z","id":"Run-42","method":"POST","path":"/api/step","status":200,"ms":0.412}\n' +
+    '\n' +
+    '`path` is the path without the query string. `ms` is the time the request took, in milliseconds. When it starts it\n' +
+    'writes one line of another kind: `{"time":"…","event":"listening","host":"127.0.0.1","port":8787}`.\n' +
+    '\n' +
+    '## Other response headers\n' +
+    '\n' +
+    '`Content-Type: application/json; charset=utf-8` on API answers and errors, `text/html; charset=utf-8` on the page,\n' +
+    '`Cache-Control: no-store` on everything.\n'
+  
+      at TestContext.<anonymous> (file://<checkout>/test/service.test.mjs:481:10)
+      at Test.runInAsyncScope (node:async_hooks:206:9)
+      at Test.run (node:internal/test_runner/test:796:25)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:526:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '# The local service and its API\n\n`tools/serve.mjs` is a small HTTP service around the game logic, made so that a test harness (or a player script,\nor a model) can drive the game over HTTP instead of through a browser. It uses Node\'s built-in modules only, and it\nimports the same `src/game.js` the page is built from. There is no second copy of the rules.\n\n    node tools/serve.mjs              # http://127.0.0.1:8787\n    PORT=9000 node tools/serve.mjs    # another port; PORT=0 lets the system pick one\n\nIt listens on `127.0.0.1` only. It is not meant to be put on the internet. Stop it with Ctrl-C (or SIGTERM).\n\n## What it serves\n\n| path | method | what |\n|---|---|---|\n| `/` and `/index.html` | GET, HEAD | the built game page, `dist/index.html`, byte for byte |\n| `/api/replay` | POST | play a seed and a turn log to the end of the log, return the result |\n| `/api/step` | POST | play a seed and a turn log for exactly n ticks, return the result and the board |\n\nEverything else is `404`. A wrong method on a known path is `405` with an `Allow` header.\n\nThe service is **stateless**: it keeps nothing between requests, and the same request always gets the same response\nbody, byte for byte.\n\n## The turn log\n\nThe same text the page puts in its replay address (`?seed=123&replay=0D.7R`). Each entry is a tick number in base 36\n(digits and lower-case letters) followed by one direction letter, `U`, `D`, `L` or `R`; entries are joined by dots,\nin order of tick. `0D.7R` means: turn down before the first tick, turn right once 7 ticks have been played. An empty\nstring is a game with no turns. Tick 36 is written `10`.\n\nA turn the game does not accept (a reversal, a repeat of the current direction, a third turn while two are waiting)\nis skipped, exactly as the page skips it. That is not an error. A log that is malformed is an error (`bad_log`).\n\n## POST /api/replay\n\nBody: `{"seed": <integer 0 to 4294967295>, "log": "<turn log>"}`. Optional: `"finish": true`.\n\nThe game is played until **one tick after the last logged turn**, or until game over if that comes first. A game\nthat is still running then says `"status": "playing"`. An empty log plays 0 ticks.\n\nWith `"finish": true` the grub then keeps going straight until the game is over. That is what the page\'s replay does,\nso with `finish` the result is the result the page\'s replay address ends on.\n\n    curl -s -X POST http://127.0.0.1:8787/api/replay -d \'{"seed": 123, "log": "0D.7R"}\'\n\n    {"seed":123,"status":"playing","cause":null,"score":0,"dew":0,"spores":0,"length":3,"ticks":8,"hash":"…"}\n\n    curl -s -X POST http://127.0.0.1:8787/api/replay -d \'{"seed": 123, "log": "0D.7R", "finish": true}\'\n\n    {"seed":123,"status":"over","cause":"wall","score":10,"dew":1,"spores":0,"length":4,"ticks":…,"hash":"…"}\n\n| field | meaning |\n|---|---|\n| `seed` | the seed, as sent |\n| `status` | `"playing"` or `"over"` |\n| `cause` | `null` while playing; `"wall"`, `"self"` or `"full"` when over |\n| `score` | 10 per dew, 50 per spore |\n| `dew` | dew eaten |\n| `spores` | spores eaten |\n| `length` | cells of the grub |\n| `ticks` | ticks played |\n| `hash` | 8 hex digits, a hash of the whole game state; two games with the same hash are in the same state |\n\n## POST /api/step\n\nBody: `{"seed": <integer>, "log": "<turn log>", "ticks": <integer 0 to 100000>}`.\n\nThe game is played for **exactly `ticks` ticks**, or until game over if that comes first (`ticks` in the answer is\nthen the tick the game ended on). Turns logged at tick `ticks` or later are in the future and are not applied.\n\nThe answer has the fields of `/api/replay` plus `state`, which is what a player needs to choose the next turn:\n\n    curl -s -X POST http://127.0.0.1:8787/api/step -d \'{"seed": 123, "log": "0D", "ticks": 3}\'\n\n    {"seed":123,"status":"playing","cause":null,"score":0,"dew":0,"spores":0,"length":3,"ticks":3,"hash":"…",\n     "state":{"cols":20,"rows":20,"dir":"D",\n              "grub":[{"x":10,"y":13},{"x":10,"y":12},{"x":10,"y":11}],\n              "dew":{"x":17,"y":17},"spore":null}}\n\n| field of `state` | meaning |\n|---|---|\n| `cols`, `rows` | the size of the grid; `x` runs 0 to `cols`-1 left to right, `y` runs 0 to `rows`-1 top to bottom |\n| `dir` | the direction the grub is moving: `U`, `D`, `L` or `R` |\n| `grub` | the cells of the grub, head first |\n| `dew` | the cell of the dew (or `null` when the grid is full) |\n| `spore` | `null`, or `{"x", "y", "ticksLeft"}`: the gold spore and how many ticks it will stay |\n\nTo play: ask for the state after n ticks, choose a turn, add `<n in base 36><letter>` to the log, ask for n+1.\n\n## Errors\n\nEvery error has the body `{"error": "<code>", "message": "<a sentence for a person>"}`. A request that gets an error\nchanges nothing (there is nothing to change: the service keeps no state).\n\n| status | code | when |\n|---|---|---|\n| 400 | `bad_json` | the body is not valid JSON (an empty body too) |\n| 400 | `bad_body` | the body is JSON but not an object |\n| 400 | `missing_field` | `seed` or `log` is missing, or `ticks` on `/api/step` |\n| 400 | `bad_seed` | `seed` is not an integer from 0 to 4294967295 (a number in a string is not an integer) |\n| 400 | `bad_log` | `log` is not a string, or the game logic rejects it as a turn log |\n| 400 | `bad_ticks` | `ticks` is not an integer from 0 to 100000 |\n| 400 | `bad_finish` | `finish` is present and not `true` or `false` |\n| 400 | `body_too_large` | the body is larger than 65536 bytes |\n| 404 | `not_found` | no such path |\n| 405 | `method_not_allowed` | the path exists but not with this method; see the `Allow` header |\n| 500 | `internal_error` | a fault of the service itself. The message never carries the inner error. The tests found no real request that causes it; they provoke it through a failing route that only the test adds. |\n\nChecks are made in this order: size, JSON, object, missing fields, seed, log, ticks, finish. So a body with a bad\nseed and a bad log answers `bad_seed`.\n\n## Limits\n\n- `ticks`: 0 to **100000**.\n- Body: at most **65536** bytes.\n- `seed`: 0 to 4294967295. The page accepts larger numbers and wraps them; the API does not, it answers `bad_seed`.\n\n## Request ids and the log\n\nEvery response carries `X-Request-Id`. If the request sent an `X-Request-Id` made of letters, digits and `-`, 1 to 64\ncharacters long, that value comes back. Otherwise the service makes a new one.\n\nThe service writes one JSON line per request on its standard output:\n\n    {"time":"2026-10-04T16:00:00.000Z","id":"Run-42","method":"POST","path":"/api/step","status":200,"ms":0.412}\n\n`path` is the path without the query string. `ms` is the time the request took, in milliseconds. When it starts it\nwrites one line of another kind: `{"time":"…","event":"listening","host":"127.0.0.1","port":8787}`.\n\n## Other response headers\n\n`Content-Type: application/json; charset=utf-8` on API answers and errors, `text/html; charset=utf-8` on the page,\n`Cache-Control: no-store` on everything.\n',
+    expected: /at most \*\*512\*\* bytes/,
+    operator: 'match'
+  }
+
+ℹ tests 26
+ℹ suites 0
+ℹ pass 21
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 643.957793
+
+✖ failing tests:
+
+test at test/service.test.mjs:370:1
+✖ R-S10 on every error path, with the largest input, the error body and the log line stay within 512 bytes (3.720877ms)
+  AssertionError [ERR_ASSERTION]: case 0: bad_log POST /api/replay: the error body is 65611 bytes
+      at TestContext.<anonymous> (file://<checkout>/test/service.test.mjs:419:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async Test.run (node:internal/test_runner/test:797:9)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:526:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '=='
+  }
+
+test at test/service.test.mjs:432:1
+✖ R-S10 a rejected value is quoted up to 40 characters, then "…", and a short one is quoted whole (1.81664ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + undefined
+  - {
+  -   bodyBytes: 512,
+  -   quoted: 40
+  - }
+      at TestContext.<anonymous> (file://<checkout>/test/service.test.mjs:433:10)
+      at Test.runInAsyncScope (node:async_hooks:206:9)
+      at Test.run (node:internal/test_runner/test:796:25)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:526:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { bodyBytes: 512, quoted: 40 },
+    operator: 'deepStrictEqual'
+  }
+
+test at test/service.test.mjs:458:1
+✖ R-S10 a refusal with a far too long message still answers within 512 bytes, with its code (2.000704ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  500 !== 400
+  
+      at TestContext.<anonymous> (file://<checkout>/test/service.test.mjs:460:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async Test.run (node:internal/test_runner/test:797:9)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:526:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 400,
+    operator: 'strictEqual'
+  }
+
+test at test/service.test.mjs:467:1
+✖ R-S10 a wrong PORT is refused at the start with a short message, however long the value (33.227735ms)
+  AssertionError [ERR_ASSERTION]: PORT must be a number from 0 to 65535, not "999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+      at TestContext.<anonymous> (file://<checkout>/test/service.test.mjs:475:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async Test.run (node:internal/test_runner/test:797:9)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:526:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '=='
+  }
+
+test at test/service.test.mjs:479:1
+✖ R-S10 docs/API.md states the 512-byte limit and the 40-character cut (1.039719ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /at most \*\*512\*\* bytes/. Input:
+  
+  '# The local service and its API\n' +
+    '\n' +
+    '`tools/serve.mjs` is a small HTTP service around the game logic, made so that a test harness (or a player script,\n' +
+    "or a model) can drive the game over HTTP instead of through a browser. It uses Node's built-in modules only, and it\n" +
+    'imports the same `src/game.js` the page is built from. There is no second copy of the rules.\n' +
+    '\n' +
+    '    node tools/serve.mjs              # http://127.0.0.1:8787\n' +
+    '    PORT=9000 node tools/serve.mjs    # another port; PORT=0 lets the system pick one\n' +
+    '\n' +
+    'It listens on `127.0.0.1` only. It is not meant to be put on the internet. Stop it with Ctrl-C (or SIGTERM).\n' +
+    '\n' +
+    '## What it serves\n' +
+    '\n' +
+    '| path | method | what |\n' +
+    '|---|---|---|\n' +
+    '| `/` and `/index.html` | GET, HEAD | the built game page, `dist/index.html`, byte for byte |\n' +
+    '| `/api/replay` | POST | play a seed and a turn log to the end of the log, return the result |\n' +
+    '| `/api/step` | POST | play a seed and a turn log for exactly n ticks, return the result and the board |\n' +
+    '\n' +
+    'Everything else is `404`. A wrong method on a known path is `405` with an `Allow` header.\n' +
+    '\n' +
+    'The service is **stateless**: it keeps nothing between requests, and the same request always gets the same response\n' +
+    'body, byte for byte.\n' +
+    '\n' +
+    '## The turn log\n' +
+    '\n' +
+    'The same text the page puts in its replay address (`?seed=123&replay=0D.7R`). Each entry is a tick number in base 36\n' +
+    '(digits and lower-case letters) followed by one direction letter, `U`, `D`, `L` or `R`; entries are joined by dots,\n' +
+    'in order of tick. `0D.7R` means: turn down before the first tick, turn right once 7 ticks have been played. An empty\n' +
+    'string is a game with no turns. Tick 36 is written `10`.\n' +
+    '\n' +
+    'A turn the game does not accept (a reversal, a repeat of the current direction, a third turn while two are waiting)\n' +
+    'is skipped, exactly as the page skips it. That is not an error. A log that is malformed is an error (`bad_log`).\n' +
+    '\n' +
+    '## POST /api/replay\n' +
+    '\n' +
+    'Body: `{"seed": <integer 0 to 4294967295>, "log": "<turn log>"}`. Optional: `"finish": true`.\n' +
+    '\n' +
+    'The game is played until **one tick after the last logged turn**, or until game over if that comes first. A game\n' +
+    'that is still running then says `"status": "playing"`. An empty log plays 0 ticks.\n' +
+    '\n' +
+    'With `"finish": true` the grub then keeps going straight until the game is over. That is what the page\'s replay does,\n' +
+    "so with `finish` the result is the result the page's replay address ends on.\n" +
+    '\n' +
+    `    curl -s -X POST http://127.0.0.1:8787/api/replay -d '{"seed": 123, "log": "0D.7R"}'\n` +
+    '\n' +
+    '    {"seed":123,"status":"playing","cause":null,"score":0,"dew":0,"spores":0,"length":3,"ticks":8,"hash":"…"}\n' +
+    '\n' +
+    `    curl -s -X POST http://127.0.0.1:8787/api/replay -d '{"seed": 123, "log": "0D.7R", "finish": true}'\n` +
+    '\n' +
+    '    {"seed":123,"status":"over","cause":"wall","score":10,"dew":1,"spores":0,"length":4,"ticks":…,"hash":"…"}\n' +
+    '\n' +
+    '| field | meaning |\n' +
+    '|---|---|\n' +
+    '| `seed` | the seed, as sent |\n' +
+    '| `status` | `"playing"` or `"over"` |\n' +
+    '| `cause` | `null` while playing; `"wall"`, `"self"` or `"full"` when over |\n' +
+    '| `score` | 10 per dew, 50 per spore |\n' +
+    '| `dew` | dew eaten |\n' +
+    '| `spores` | spores eaten |\n' +
+    '| `length` | cells of the grub |\n' +
+    '| `ticks` | ticks played |\n' +
+    '| `hash` | 8 hex digits, a hash of the whole game state; two games with the same hash are in the same state |\n' +
+    '\n' +
+    '## POST /api/step\n' +
+    '\n' +
+    'Body: `{"seed": <integer>, "log": "<turn log>", "ticks": <integer 0 to 100000>}`.\n' +
+    '\n' +
+    'The game is played for **exactly `ticks` ticks**, or until game over if that comes first (`ticks` in the answer is\n' +
+    'then the tick the game ended on). Turns logged at tick `ticks` or later are in the future and are not applied.\n' +
+    '\n' +
+    'The answer has the fields of `/api/replay` plus `state`, which is what a player needs to choose the next turn:\n' +
+    '\n' +
+    `    curl -s -X POST http://127.0.0.1:8787/api/step -d '{"seed": 123, "log": "0D", "ticks": 3}'\n` +
+    '\n' +
+    '    {"seed":123,"status":"playing","cause":null,"score":0,"dew":0,"spores":0,"length":3,"ticks":3,"hash":"…",\n' +
+    '     "state":{"cols":20,"rows":20,"dir":"D",\n' +
+    '              "grub":[{"x":10,"y":13},{"x":10,"y":12},{"x":10,"y":11}],\n' +
+    '              "dew":{"x":17,"y":17},"spore":null}}\n' +
+    '\n' +
+    '| field of `state` | meaning |\n' +
+    '|---|---|\n' +
+    '| `cols`, `rows` | the size of the grid; `x` runs 0 to `cols`-1 left to right, `y` runs 0 to `rows`-1 top to bottom |\n' +
+    '| `dir` | the direction the grub is moving: `U`, `D`, `L` or `R` |\n' +
+    '| `grub` | the cells of the grub, head first |\n' +
+    '| `dew` | the cell of the dew (or `null` when the grid is full) |\n' +
+    '| `spore` | `null`, or `{"x", "y", "ticksLeft"}`: the gold spore and how many ticks it will stay |\n' +
+    '\n' +
+    'To play: ask for the state after n ticks, choose a turn, add `<n in base 36><letter>` to the log, ask for n+1.\n' +
+    '\n' +
+    '## Errors\n' +
+    '\n' +
+    'Every error has the body `{"error": "<code>", "message": "<a sentence for a person>"}`. A request that gets an error\n' +
+    'changes nothing (there is nothing to change: the service keeps no state).\n' +
+    '\n' +
+    '| status | code | when |\n' +
+    '|---|---|---|\n' +
+    '| 400 | `bad_json` | the body is not valid JSON (an empty body too) |\n' +
+    '| 400 | `bad_body` | the body is JSON but not an object |\n' +
+    '| 400 | `missing_field` | `seed` or `log` is missing, or `ticks` on `/api/step` |\n' +
+    '| 400 | `bad_seed` | `seed` is not an integer from 0 to 4294967295 (a number in a string is not an integer) |\n' +
+    '| 400 | `bad_log` | `log` is not a string, or the game logic rejects it as a turn log |\n' +
+    '| 400 | `bad_ticks` | `ticks` is not an integer from 0 to 100000 |\n' +
+    '| 400 | `bad_finish` | `finish` is present and not `true` or `false` |\n' +
+    '| 400 | `body_too_large` | the body is larger than 65536 bytes |\n' +
+    '| 404 | `not_found` | no such path |\n' +
+    '| 405 | `method_not_allowed` | the path exists but not with this method; see the `Allow` header |\n' +
+    '| 500 | `internal_error` | a fault of the service itself. The message never carries the inner error. The tests found no real request that causes it; they provoke it through a failing route that only the test adds. |\n' +
+    '\n' +
+    'Checks are made in this order: size, JSON, object, missing fields, seed, log, ticks, finish. So a body with a bad\n' +
+    'seed and a bad log answers `bad_seed`.\n' +
+    '\n' +
+    '## Limits\n' +
+    '\n' +
+    '- `ticks`: 0 to **100000**.\n' +
+    '- Body: at most **65536** bytes.\n' +
+    '- `seed`: 0 to 4294967295. The page accepts larger numbers and wraps them; the API does not, it answers `bad_seed`.\n' +
+    '\n' +
+    '## Request ids and the log\n' +
+    '\n' +
+    'Every response carries `X-Request-Id`. If the request sent an `X-Request-Id` made of letters, digits and `-`, 1 to 64\n' +
+    'characters long, that value comes back. Otherwise the service makes a new one.\n' +
+    '\n' +
+    'The service writes one JSON line per request on its standard output:\n' +
+    '\n' +
+    '    {"time":"2026-10-04T16:00:00.000Z","id":"Run-42","method":"POST","path":"/api/step","status":200,"ms":0.412}\n' +
+    '\n' +
+    '`path` is the path without the query string. `ms` is the time the request took, in milliseconds. When it starts it\n' +
+    'writes one line of another kind: `{"time":"…","event":"listening","host":"127.0.0.1","port":8787}`.\n' +
+    '\n' +
+    '## Other response headers\n' +
+    '\n' +
+    '`Content-Type: application/json; charset=utf-8` on API answers and errors, `text/html; charset=utf-8` on the page,\n' +
+    '`Cache-Control: no-store` on everything.\n'
+  
+      at TestContext.<anonymous> (file://<checkout>/test/service.test.mjs:481:10)
+      at Test.runInAsyncScope (node:async_hooks:206:9)
+      at Test.run (node:internal/test_runner/test:796:25)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:526:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '# The local service and its API\n\n`tools/serve.mjs` is a small HTTP service around the game logic, made so that a test harness (or a player script,\nor a model) can drive the game over HTTP instead of through a browser. It uses Node\'s built-in modules only, and it\nimports the same `src/game.js` the page is built from. There is no second copy of the rules.\n\n    node tools/serve.mjs              # http://127.0.0.1:8787\n    PORT=9000 node tools/serve.mjs    # another port; PORT=0 lets the system pick one\n\nIt listens on `127.0.0.1` only. It is not meant to be put on the internet. Stop it with Ctrl-C (or SIGTERM).\n\n## What it serves\n\n| path | method | what |\n|---|---|---|\n| `/` and `/index.html` | GET, HEAD | the built game page, `dist/index.html`, byte for byte |\n| `/api/replay` | POST | play a seed and a turn log to the end of the log, return the result |\n| `/api/step` | POST | play a seed and a turn log for exactly n ticks, return the result and the board |\n\nEverything else is `404`. A wrong method on a known path is `405` with an `Allow` header.\n\nThe service is **stateless**: it keeps nothing between requests, and the same request always gets the same response\nbody, byte for byte.\n\n## The turn log\n\nThe same text the page puts in its replay address (`?seed=123&replay=0D.7R`). Each entry is a tick number in base 36\n(digits and lower-case letters) followed by one direction letter, `U`, `D`, `L` or `R`; entries are joined by dots,\nin order of tick. `0D.7R` means: turn down before the first tick, turn right once 7 ticks have been played. An empty\nstring is a game with no turns. Tick 36 is written `10`.\n\nA turn the game does not accept (a reversal, a repeat of the current direction, a third turn while two are waiting)\nis skipped, exactly as the page skips it. That is not an error. A log that is malformed is an error (`bad_log`).\n\n## POST /api/replay\n\nBody: `{"seed": <integer 0 to 4294967295>, "log": "<turn log>"}`. Optional: `"finish": true`.\n\nThe game is played until **one tick after the last logged turn**, or until game over if that comes first. A game\nthat is still running then says `"status": "playing"`. An empty log plays 0 ticks.\n\nWith `"finish": true` the grub then keeps going straight until the game is over. That is what the page\'s replay does,\nso with `finish` the result is the result the page\'s replay address ends on.\n\n    curl -s -X POST http://127.0.0.1:8787/api/replay -d \'{"seed": 123, "log": "0D.7R"}\'\n\n    {"seed":123,"status":"playing","cause":null,"score":0,"dew":0,"spores":0,"length":3,"ticks":8,"hash":"…"}\n\n    curl -s -X POST http://127.0.0.1:8787/api/replay -d \'{"seed": 123, "log": "0D.7R", "finish": true}\'\n\n    {"seed":123,"status":"over","cause":"wall","score":10,"dew":1,"spores":0,"length":4,"ticks":…,"hash":"…"}\n\n| field | meaning |\n|---|---|\n| `seed` | the seed, as sent |\n| `status` | `"playing"` or `"over"` |\n| `cause` | `null` while playing; `"wall"`, `"self"` or `"full"` when over |\n| `score` | 10 per dew, 50 per spore |\n| `dew` | dew eaten |\n| `spores` | spores eaten |\n| `length` | cells of the grub |\n| `ticks` | ticks played |\n| `hash` | 8 hex digits, a hash of the whole game state; two games with the same hash are in the same state |\n\n## POST /api/step\n\nBody: `{"seed": <integer>, "log": "<turn log>", "ticks": <integer 0 to 100000>}`.\n\nThe game is played for **exactly `ticks` ticks**, or until game over if that comes first (`ticks` in the answer is\nthen the tick the game ended on). Turns logged at tick `ticks` or later are in the future and are not applied.\n\nThe answer has the fields of `/api/replay` plus `state`, which is what a player needs to choose the next turn:\n\n    curl -s -X POST http://127.0.0.1:8787/api/step -d \'{"seed": 123, "log": "0D", "ticks": 3}\'\n\n    {"seed":123,"status":"playing","cause":null,"score":0,"dew":0,"spores":0,"length":3,"ticks":3,"hash":"…",\n     "state":{"cols":20,"rows":20,"dir":"D",\n              "grub":[{"x":10,"y":13},{"x":10,"y":12},{"x":10,"y":11}],\n              "dew":{"x":17,"y":17},"spore":null}}\n\n| field of `state` | meaning |\n|---|---|\n| `cols`, `rows` | the size of the grid; `x` runs 0 to `cols`-1 left to right, `y` runs 0 to `rows`-1 top to bottom |\n| `dir` | the direction the grub is moving: `U`, `D`, `L` or `R` |\n| `grub` | the cells of the grub, head first |\n| `dew` | the cell of the dew (or `null` when the grid is full) |\n| `spore` | `null`, or `{"x", "y", "ticksLeft"}`: the gold spore and how many ticks it will stay |\n\nTo play: ask for the state after n ticks, choose a turn, add `<n in base 36><letter>` to the log, ask for n+1.\n\n## Errors\n\nEvery error has the body `{"error": "<code>", "message": "<a sentence for a person>"}`. A request that gets an error\nchanges nothing (there is nothing to change: the service keeps no state).\n\n| status | code | when |\n|---|---|---|\n| 400 | `bad_json` | the body is not valid JSON (an empty body too) |\n| 400 | `bad_body` | the body is JSON but not an object |\n| 400 | `missing_field` | `seed` or `log` is missing, or `ticks` on `/api/step` |\n| 400 | `bad_seed` | `seed` is not an integer from 0 to 4294967295 (a number in a string is not an integer) |\n| 400 | `bad_log` | `log` is not a string, or the game logic rejects it as a turn log |\n| 400 | `bad_ticks` | `ticks` is not an integer from 0 to 100000 |\n| 400 | `bad_finish` | `finish` is present and not `true` or `false` |\n| 400 | `body_too_large` | the body is larger than 65536 bytes |\n| 404 | `not_found` | no such path |\n| 405 | `method_not_allowed` | the path exists but not with this method; see the `Allow` header |\n| 500 | `internal_error` | a fault of the service itself. The message never carries the inner error. The tests found no real request that causes it; they provoke it through a failing route that only the test adds. |\n\nChecks are made in this order: size, JSON, object, missing fields, seed, log, ticks, finish. So a body with a bad\nseed and a bad log answers `bad_seed`.\n\n## Limits\n\n- `ticks`: 0 to **100000**.\n- Body: at most **65536** bytes.\n- `seed`: 0 to 4294967295. The page accepts larger numbers and wraps them; the API does not, it answers `bad_seed`.\n\n## Request ids and the log\n\nEvery response carries `X-Request-Id`. If the request sent an `X-Request-Id` made of letters, digits and `-`, 1 to 64\ncharacters long, that value comes back. Otherwise the service makes a new one.\n\nThe service writes one JSON line per request on its standard output:\n\n    {"time":"2026-10-04T16:00:00.000Z","id":"Run-42","method":"POST","path":"/api/step","status":200,"ms":0.412}\n\n`path` is the path without the query string. `ms` is the time the request took, in milliseconds. When it starts it\nwrites one line of another kind: `{"time":"…","event":"listening","host":"127.0.0.1","port":8787}`.\n\n## Other response headers\n\n`Content-Type: application/json; charset=utf-8` on API answers and errors, `text/html; charset=utf-8` on the page,\n`Cache-Control: no-store` on everything.\n',
+    expected: /at most \*\*512\*\* bytes/,
+    operator: 'match'
+  }
+----------------------------------------------------------------------
+exit code: 1

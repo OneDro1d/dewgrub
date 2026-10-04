@@ -1,0 +1,173 @@
+version:  v1
+date:     2026-10-04T13:37:12Z
+commit:   4e2157ac89add2559f7723171d98e96176d93dc1
+tree:     0 uncommitted change(s) outside evidence/
+node:     v20.20.2
+command:  ./check.sh
+----------------------------------------------------------------------
+== 1/2 unit tests (Node, no browser) ==
+TAP version 13
+# Subtest: R-L1 same seed and same turns give the same hash after every tick
+ok 1 - R-L1 same seed and same turns give the same hash after every tick
+  ---
+  duration_ms: 39.93497
+  ...
+# Subtest: R-L1 different seeds put the first dew in different places
+ok 2 - R-L1 different seeds put the first dew in different places
+  ---
+  duration_ms: 0.356342
+  ...
+# Subtest: R-L2 a new game has the documented starting state
+ok 3 - R-L2 a new game has the documented starting state
+  ---
+  duration_ms: 0.222025
+  ...
+# Subtest: R-L3 nothing moves while the game is ready
+ok 4 - R-L3 nothing moves while the game is ready
+  ---
+  duration_ms: 0.122642
+  ...
+# Subtest: R-L3 one step moves the head one cell and keeps the length
+ok 5 - R-L3 one step moves the head one cell and keeps the length
+  ---
+  duration_ms: 0.158827
+  ...
+# Subtest: R-L4 a turn takes effect on the next step
+ok 6 - R-L4 a turn takes effect on the next step
+  ---
+  duration_ms: 0.171575
+  ...
+# Subtest: R-L4 a reversal or a repeat of the current direction is rejected
+ok 7 - R-L4 a reversal or a repeat of the current direction is rejected
+  ---
+  duration_ms: 0.123647
+  ...
+# Subtest: R-L4 two turns can wait, a third is rejected, each is checked against the one before
+ok 8 - R-L4 two turns can wait, a third is rejected, each is checked against the one before
+  ---
+  duration_ms: 0.154965
+  ...
+# Subtest: R-L5 leaving the grid on any side ends the game with cause wall
+ok 9 - R-L5 leaving the grid on any side ends the game with cause wall
+  ---
+  duration_ms: 0.240929
+  ...
+# Subtest: R-L6 running into the body ends the game with cause self
+ok 10 - R-L6 running into the body ends the game with cause self
+  ---
+  duration_ms: 0.194906
+  ...
+# Subtest: R-L6 moving onto the cell the tail leaves is legal
+ok 11 - R-L6 moving onto the cell the tail leaves is legal
+  ---
+  duration_ms: 0.159721
+  ...
+# Subtest: R-L7 eating dew scores 10, grows by one and places new dew on a free cell
+ok 12 - R-L7 eating dew scores 10, grows by one and places new dew on a free cell
+  ---
+  duration_ms: 0.233196
+  ...
+# Subtest: R-L8 a spore appears after the 5th dew, lasts 40 ticks, then is gone
+ok 13 - R-L8 a spore appears after the 5th dew, lasts 40 ticks, then is gone
+  ---
+  duration_ms: 0.269082
+  ...
+# Subtest: R-L8 eating a spore scores 50 and does not grow
+ok 14 - R-L8 eating a spore scores 50 and does not grow
+  ---
+  duration_ms: 0.216769
+  ...
+# Subtest: R-L8 a spore on its last tick can still be eaten
+ok 15 - R-L8 a spore on its last tick can still be eaten
+  ---
+  duration_ms: 0.184153
+  ...
+# Subtest: R-L8 no second spore appears while one exists
+ok 16 - R-L8 no second spore appears while one exists
+  ---
+  duration_ms: 0.333187
+  ...
+# Subtest: R-L9 tick length starts at 150 ms, drops 8 ms per 3 dew, floor 70 ms
+ok 17 - R-L9 tick length starts at 150 ms, drops 8 ms per 3 dew, floor 70 ms
+  ---
+  duration_ms: 0.211245
+  ...
+# Subtest: R-L10 after game over, step and turn change nothing
+ok 18 - R-L10 after game over, step and turn change nothing
+  ---
+  duration_ms: 0.31659
+  ...
+# Subtest: R-L11 filling the grid ends the game with cause full
+ok 19 - R-L11 filling the grid ends the game with cause full
+  ---
+  duration_ms: 0.20464
+  ...
+# Subtest: R-L12 accepted turns are logged with their tick, rejected ones are not
+ok 20 - R-L12 accepted turns are logged with their tick, rejected ones are not
+  ---
+  duration_ms: 0.172409
+  ...
+# Subtest: R-L12 replay of seed and turn log reproduces the final state
+ok 21 - R-L12 replay of seed and turn log reproduces the final state
+  ---
+  duration_ms: 45.789523
+  ...
+# Subtest: R-L12 the turn log encodes to a URL-safe string and back
+ok 22 - R-L12 the turn log encodes to a URL-safe string and back
+  ---
+  duration_ms: 20.575996
+  ...
+# Subtest: R-L12 a malformed turn log is rejected
+ok 23 - R-L12 a malformed turn log is rejected
+  ---
+  duration_ms: 0.285142
+  ...
+# Subtest: R-L13 seed parsing
+ok 24 - R-L13 seed parsing
+  ---
+  duration_ms: 0.177737
+  ...
+# Subtest: R-L14 invariants hold on every tick of 100 games by the scripted player
+ok 25 - R-L14 invariants hold on every tick of 100 games by the scripted player
+  ---
+  duration_ms: 2226.044611
+  ...
+# Subtest: R-L14 invariants hold on every tick of 100 games with random input
+ok 26 - R-L14 invariants hold on every tick of 100 games with random input
+  ---
+  duration_ms: 5.669507
+  ...
+# Subtest: R-L15 step reports what happened and snapshot is a copy
+ok 27 - R-L15 step reports what happened and snapshot is a copy
+  ---
+  duration_ms: 0.162317
+  ...
+1..27
+# tests 27
+# suites 0
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2406.307836
+== 2/2 every logic requirement is named by a test ==
+R-L1    2 test(s)
+R-L2    1 test(s)
+R-L3    2 test(s)
+R-L4    3 test(s)
+R-L5    1 test(s)
+R-L6    2 test(s)
+R-L7    1 test(s)
+R-L8    4 test(s)
+R-L9    1 test(s)
+R-L10   1 test(s)
+R-L11   1 test(s)
+R-L12   4 test(s)
+R-L13   1 test(s)
+R-L14   2 test(s)
+R-L15   1 test(s)
+15/15 requirements (prefix R-L) are named by a test
+ALL CHECKS PASSED
+----------------------------------------------------------------------
+exit code: 0

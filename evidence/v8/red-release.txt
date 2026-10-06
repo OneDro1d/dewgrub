@@ -1,0 +1,43 @@
+version:      v8
+tree:         v7 (3d34036f3c1515d440dc271e1dca7b494df5def2), a fresh clone
+test file:    e2e/test_release.py as it is at e7ab829917163226140886e26aea744236b1d74f
+date:         2026-10-06T13:25:18Z, by tools/red-proof.sh
+node:         v20.20.2
+command:      python3 -m unittest discover -s e2e -p test_release.py -v
+expected:     the command should fail: the old tree does not obey the new rule
+shown as:     <checkout> = the temporary clone, <python> = the Python install, <home> = the home folder
+----------------------------------------------------------------------
+test_R_R1_the_page_reports_the_version_being_built (test_release.ReleaseTests.test_R_R1_the_page_reports_the_version_being_built) ... FAIL
+test_R_R2_every_path_the_readme_names_is_in_the_repository (test_release.ReleaseTests.test_R_R2_every_path_the_readme_names_is_in_the_repository) ... FAIL
+
+======================================================================
+FAIL: test_R_R1_the_page_reports_the_version_being_built (test_release.ReleaseTests.test_R_R1_the_page_reports_the_version_being_built)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_release.py", line 54, in test_R_R1_the_page_reports_the_version_being_built
+    self.assertEqual(number, rows[-1], f"the page reports {shown}, the README's newest version is v{rows[-1]}")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 6 != 7 : the page reports v6, the README's newest version is v7
+
+======================================================================
+FAIL: test_R_R2_every_path_the_readme_names_is_in_the_repository (test_release.ReleaseTests.test_R_R2_every_path_the_readme_names_is_in_the_repository)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>/e2e/test_release.py", line 76, in test_R_R2_every_path_the_readme_names_is_in_the_repository
+    self.assertEqual([path for path, there in paths if not there], [], "the README names what is not in this commit")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['evidence/v7/', 'red-error-size.txt'] != []
+
+First list contains 2 additional elements.
+First extra element 0:
+'evidence/v7/'
+
+- ['evidence/v7/', 'red-error-size.txt']
++ [] : the README names what is not in this commit
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.818s
+
+FAILED (failures=2)
+----------------------------------------------------------------------
+exit code: 1

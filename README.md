@@ -128,7 +128,7 @@ repository. `tools/evidence.sh vN` runs `./check.sh` on a fresh clone and stores
 | v5 | made fit for strangers: MIT license, nothing machine-specific in any tracked file, the three-command check, the sub-path test, a scripted gameplay clip | `evidence/v5/` (incl. `red-output.txt`: the new tests failing on the v4 tree) |
 | v6 | nothing moves before the first steer; the local HTTP service; the players, the Jev player and the benchmark; a neutral author on every commit | `evidence/v6/` (incl. four `red-*.txt`: the new tests failing before the change, and `quickstart-output.txt`) |
 | v7 | no error grows with the input: an error body and a log line are at most 512 bytes, a value from the request is shown up to 40 characters | `evidence/v7/` (incl. `red-error-size.txt`: the new tests failing on the v6 tree) |
-| v8 | `/api/step` plays exactly the ticks asked for, whatever else the body carries; a request line of any length is answered by its path, and a request head that cannot be read gets a JSON error; the page reports the version being built; this page names only what its commit holds | the red runs are added in the next commit |
+| v8 | `/api/step` plays exactly the ticks asked for, whatever else the body carries; a request line of any length is answered by its path, and a request head that cannot be read gets a JSON error; the page reports the version being built; this page names only what its commit holds | `evidence/v8/` (`red-service.txt` and `red-release.txt`: the new tests failing on a fresh clone of tag `v7`) |
 
 **The outputs in `evidence/v1` to `evidence/v5` were regenerated, twice.** At v5, because the ones first stored
 carried folder names of the machine they were made on. At v6, because the author of every commit was rewritten to a

@@ -250,4 +250,4 @@ after the commit) and the last six rows, whose source is named.
 
 ## License
 
-MIT license, copyright 2026 OneDroid. See `LICENSE`.
+MIT license, copyright 2026 Providentia Worldwide / OneDroid. See `LICENSE`.

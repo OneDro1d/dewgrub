@@ -122,7 +122,8 @@ class PublicTests(BrowserCase):
     def test_R_B16_the_license_is_mit_and_the_readme_says_so(self):
         text = (ROOT / "LICENSE").read_text()
         self.assertTrue(text.startswith("MIT License"))
-        self.assertIn("Copyright (c) 2026 OneDroid", text)
+        # The holder our other public repository names. Up to v8 the line said "OneDroid" alone.
+        self.assertEqual(text.splitlines()[2], "Copyright (c) 2026 Providentia Worldwide / OneDroid")
         self.assertTrue("MIT license" in (ROOT / "README.md").read_text(), "the README does not name the MIT license")
 
 

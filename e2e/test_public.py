@@ -18,7 +18,10 @@ FORBIDDEN = [
     ("a per-user temp path", re.compile("/tmp/cl" + "aude")),
     ("the operator's name", re.compile("mic" + "ha[lł]|ba" + "cia", re.I)),
     ("an internal workspace word", re.compile("note" + "pad|nun" + "tius|in" + r"box\b|out" + r"box\b", re.I)),
-    ("an internal machine or store name", re.compile("smm" + "-venv|onedro" + "1d|engram" + "-prod", re.I)),
+    # The spelling with the digit is the name of the organisation that hosts the game. It is allowed in one
+    # place only, the public address of the game (README, "Play it"), and nowhere else.
+    ("an internal machine or store name",
+     re.compile("smm" + "-venv|onedro" + r"1d(?!\.github\.io/dewgrub/)|engram" + "-prod", re.I)),
     ("the internal word for the task", re.compile(r"\bbri" + r"ef\b", re.I)),
 ]
 # The one identity every commit carries: a role, not a person.
@@ -104,6 +107,12 @@ class PublicTests(BrowserCase):
                     hits.append(f"{name}:{line}: {what}")
         self.maxDiff = None
         self.assertEqual(hits, [])
+        # The one exception, on both sides: the public address passes, the same name anywhere else does not.
+        name = "onedro" + "1d"
+        internal = dict(FORBIDDEN)["an internal machine or store name"]
+        self.assertIsNone(internal.search(f"https://{name}.github.io/dewgrub/"))
+        for other in (f"github.com/{name}/dewgrub", f"https://{name}.github.io/other/", f"/code/{name}/"):
+            self.assertIsNotNone(internal.search(other), other)
 
     def test_R_B16_no_personal_name_or_address_in_the_git_history(self):
         # Every commit reachable from a branch or a tag: author and committer are the one neutral identity.

@@ -140,7 +140,7 @@ through the JSON or leave half a sentence), and leaving the value out (the calle
 
 ## D18 — On `/api/step`, `finish` is checked and then ignored (6 Oct 2026, v8)
 
-Somebody else's harness ran 29 checks against v7; 2 failed. The builder of v8 was given their names and the rules
+Somebody else's harness ran its checks against v7; 2 failed (of 29 in a first run, of 30 in the run that counts). The builder of v8 was given their names and the rules
 they are about, not what they contain. The first is about R-S3, what `/api/step` answers. Reading the rule and
 `docs/API.md` against the code found one disagreement: the service read `finish` on both endpoints, so
 `{"seed":123,"log":"0D","ticks":3,"finish":true}` played on to the wall and answered `"ticks":10`, where the rule
@@ -190,3 +190,25 @@ commit the tag points at. So the order is now fixed. The commit that gets the ta
 only. The check output of the tag is committed on `main` straight after, and the README says that this is where
 it is. Rejected: moving the tag after the evidence commit (the evidence would then describe another commit than
 the one it is stored in), and exempting `evidence/` from R-R2 (that is the fault the rule is for).
+
+## D21 — Before the repository is public: one exception in a test, and claims cut down to what is checked (6 Oct 2026, after v8)
+
+A commit on `main` after tag `v8`, with no code change and no new tag.
+
+**A test was narrowed, on purpose.** The test of R-B16 forbids, in every tracked file, the spelling of the
+organisation that hosts this repository, because during the build that spelling was a folder name of the build
+machine. The public address of the game contains it. The pattern now allows the spelling directly in front of
+`.github.io/dewgrub/` and nowhere else, and the test checks both sides: the address passes, and the same name in
+three other places does not. Rejected: leaving the address out of the README (a public game with no address),
+and dropping the pattern (it still catches the folder name).
+
+**Claims were cut down to what the test reads.** The README said that no tracked file and no commit carries a
+machine path, a person's name or an internal name. The test reads the files of the commit that is checked out,
+and the author, committer and message of every commit. It does not read the files of older commits, and the
+files at tags `v1` to `v4` are not clean (the counts are in the README). The README now says exactly that. The
+history was not rewritten: the ids of the commits that were tested must not change. The rule text of R-B16
+already said only what the test reads.
+
+**What the builder was told is written as told.** The outside harness passed tag `v8`, 30 of 30. Another session
+called the real Jev model with its own key, without an error. Neither can be shown from this repository, so the
+README, `STACK.md` and the requirements say "as told to the builder" and both stay under "not proven".

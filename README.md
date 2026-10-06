@@ -10,7 +10,8 @@ same kind of agent, after somebody else's tests failed twice on v7.)
 
 ## Play it
 
-**Public address: (not published yet: this line is filled in when the game goes online)**
+**Public address: https://onedro1d.github.io/dewgrub/** (published on 6 Oct 2026 from `dist/` by another session,
+after this line was written; that session checks the address, the builder did not and could not)
 
 Or download this repository and open `dist/index.html` in a browser. That is all.
 
@@ -69,9 +70,11 @@ prints a replay address for the page. The key is read from the environment varia
 nowhere else; it is never printed or written. Without a key the tool stops with exit code 2. It never makes more
 than `--max-calls` requests per game (default 300).
 
-**The real Jev model has not been called.** The builder had no key. Everything about the Jev player is proven
-against a fake model server that the tests start, written from the model's public API description. This page shows
-no number for Jev, and will not until a real run exists.
+**The builder never called the real Jev model.** The builder had no key. Everything the tests say about the Jev
+player runs against a fake model server that the tests start, written from the model's public API description.
+As told to the builder: on 6 Oct 2026 another session called the real model through `tools/jev-player.mjs` and
+`tools/bench.mjs`, with a key the builder never had, and the tools worked without an error. The run records and
+the numbers of those runs are not in this repository, so this page still shows no number for Jev.
 
 ## What `./check.sh` runs
 
@@ -80,7 +83,7 @@ no number for Jev, and will not until a real run exists.
 | 1 | `node --test test/` | the game logic, the browser-free parts of the presentation, the local service and the players obey their rules (the Jev player against a fake model server) |
 | 2 | `node tools/mutate.mjs` | the unit tests bite: the logic, the service and the players are broken on purpose 106 ways, and each time a unit test must fail |
 | 3 | `node tools/build.mjs --check` | the committed `dist/index.html` is exactly what the source builds to |
-| 4 | Playwright tests in `e2e/` | the built page works in headless Chromium: keyboard, touch, mouse, seed, replay, sound, pause, fit, sub-path, no network; the page and the service agree; the repository and its history hold nothing machine-specific or personal; the page reports the version being built and this README names only what is in the commit |
+| 4 | Playwright tests in `e2e/` | the built page works in headless Chromium: keyboard, touch, mouse, seed, replay, sound, pause, fit, sub-path, no network; the page and the service agree; the files of the commit hold nothing machine-specific or personal, and neither does the author or the message of any commit; the page reports the version being built and this README names only what is in the commit |
 | 5 | `node tools/mutate-page.mjs` | the browser tests bite: the page is broken on purpose 37 ways, and each time the named browser test must fail |
 | 6 | `node tools/trace.mjs` | every rule in `docs/REQUIREMENTS.md` is named by at least one test |
 
@@ -114,10 +117,14 @@ repository. `tools/evidence.sh vN` runs `./check.sh` on a fresh clone and stores
    and ran its own checks. From v6 on it also runs an independent test against the service, which the builder has
    never seen. Its results are not in this repository. A first run of that session's own scenarios against the v6
    service passed all 16 and still found one defect: an error body that repeated a 64 kB input. v7 fixes it.
-   Its harness then ran 29 checks against v7: 27 passed and 2 failed. The builder of v8 was told the names of the
-   two and the rules they are about, and nothing of what they contain or expect. Re-reading those rules against
-   the code found one disagreement for each (`DECISIONS.md` D18, D19); whether those are what the two checks
-   look for, the builder cannot know.
+   Its harness then ran its checks against v7, and two failed. All figures here are as told to the builder: a
+   first run had 29 checks and 27 passed; the run that counts had 30 checks and 28 passed, with the same two
+   failing. The builder of v8 was told the names of the two and the rules they are about, and nothing of what
+   they contain or expect. Re-reading those rules against the code found one disagreement for each
+   (`DECISIONS.md` D18, D19). The same harness then ran against tag `v8`: 30 checks, 30 passed, no failing name,
+   again as told to the builder. Those results are not in this repository, and the builder still does not know
+   what the two checks contain. The harness did not test what v8 added (the limit on the request head and its two
+   error codes, the rules R-R1 and R-R2); only the tests here cover those.
 
 | version | what it added | evidence |
 |---|---|---|
@@ -194,19 +201,28 @@ after the commit) and the last six rows, whose source is named.
 - The page reports the version of the tag it is built at, and every path this page names is in the commit.
 - The Jev player, **against a fake model server**: one request per move with the documented body, retries on 429
   and 529 only, a hard budget, a key that never leaves the request, a run record with every decision.
-- No tracked file and no commit carries a home-folder path, a person's name or address, or the internal names of
-  the workspace it was built in.
+- No file of the commit that is checked out contains a home-folder path, a person's name, or the internal names of
+  the workspace it was built in; and no commit carries a person's name or address as author or committer, or any
+  of those things in its message. That is all the test reads. It does not read the files of older commits, and
+  those are not clean: the files at tags `v1` to `v4` still contain folder names of the build machine and internal
+  workspace words, and `STACK.md` at tag `v4` names the operator by first name. Counted with `git grep` for the
+  test's own patterns: 3 files at `v1`, 5 at `v2`, 5 at `v3`, 13 at `v4`, and none at `v5` to `v8`. The history
+  was not rewritten for that, because it would change the ids of the commits that were tested.
 - The tests are not decorative: 106 of 106 deliberate faults in the logic, the service and the players, and 37 of
   37 deliberate page faults, make a test fail.
 
 **Not proven:**
 
-- **The Jev player works with the real Jev model, and how well Jev plays.** The real model was never called. If its
-  API differs from its public description, these tests do not notice. There is no score for Jev anywhere here.
+- **The Jev player works with the real Jev model, and how well Jev plays.** The builder never called the real
+  model, and no test here does. If its API differs from its public description, these tests do not notice. The
+  builder was told that another session ran the tools against the real model on 6 Oct 2026 without an error;
+  nothing of those runs is in this repository. There is no score for Jev anywhere here.
 - **The service passes the independent acceptance test.** That test belongs to somebody else and the builder never
-  saw it. The service was built from a written description of what it must do. At v7 it did not pass: 27 of 29
-  checks. v8 fixes one disagreement between the service and its rules for each of the two failed checks, found
-  from their names alone. Whether v8 passes was not known when this was written.
+  saw it. The service was built from a written description of what it must do. At v7 it did not pass: two checks
+  failed (28 of 30 passed in the run that counts; 27 of 29 in a first run). v8 fixes one disagreement between the
+  service and its rules for each of the two, found from their names alone. The builder was then told that the
+  same harness passed tag `v8`, 30 of 30. That is a report, not something this repository can show: the checks
+  and their results are not here, so it stays in this list.
 - **It is fun.** Nobody played it. Not the builder, not a person.
 - **The first-steer start is clearer for a first-time player.** It removes the death before any steering. Whether
   people understand "steer to start" was not tried with people.
@@ -221,8 +237,8 @@ after the commit) and the last six rows, whose source is named.
 - **A really hidden tab pauses the game.** The test fakes the browser's "tab is hidden" signal.
 - **It is usable with a screen reader.** The board has a label that states the game status; nobody listened to it.
 - **The four-digit score fits the bar** was tested with a simulated score text, not by playing to 1000 points.
-- **It works at its public address.** The sub-path test runs against a local server. The real host, its headers and
-  its caching were not tested, because nothing was deployed when this was written.
+- **It works at its public address.** The sub-path test runs against a local server. The builder did not test the
+  real host, its headers or its caching: the page was published by another session after this was written.
 - **The service is safe to put on the internet.** It was made for a local test and listens on `127.0.0.1` only. It
   has no rate limit and no authentication.
 - **The three-command check works on your machine.** It was proven on one Linux machine (see above). macOS and

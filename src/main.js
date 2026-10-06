@@ -6,7 +6,8 @@ import { keyIntent, swipeDir } from './input.js';
 import { createAudio } from './audio.js';
 import { VIEW_W, VIEW_H, drawFrame } from './render.js';
 
-const VERSION = 'v6';
+// The version this page is built for. R-R1: a test fails if it is not the README's newest version and the tag.
+const VERSION = 'v8';
 const RESTART_GUARD_MS = 350; // a key or tap this soon after dying is ignored, so a late move cannot restart
 
 const params = new URLSearchParams(window.location.search);

@@ -8,7 +8,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const only = (process.argv.find((a) => a.startsWith('--only=')) || '--only=R-').slice(7);
 
 const reqText = readFileSync(join(root, 'docs/REQUIREMENTS.md'), 'utf8');
-const ids = [...new Set(reqText.match(/^\| (R-[LPBSJ]\d+) /gm).map((m) => m.slice(2).trim()))]
+const ids = [...new Set(reqText.match(/^\| (R-[LPBSJR]\d+) /gm).map((m) => m.slice(2).trim()))]
   .filter((id) => id.startsWith(only));
 
 let testText = '';

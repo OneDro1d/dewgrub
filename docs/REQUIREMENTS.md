@@ -62,14 +62,14 @@ is one step of the game clock. The **turn log** is the list of accepted turns, e
 |---|---|
 | R-S1 | The service imports the game logic the page is built from and holds no copy of the rules. For 40 seeded games it ends in the same state as the logic. |
 | R-S2 | `POST /api/replay` answers exactly the fields `seed`, `status`, `cause`, `score`, `dew`, `spores`, `length`, `ticks`, `hash`, after playing to one tick past the last logged turn or to game over. A game still running says `playing`. With `finish: true` it goes on straight to game over, as the page's replay does. |
-| R-S3 | `POST /api/step` answers the same fields after exactly `ticks` ticks (or at game over, if earlier), plus `state`: grid size, grub cells head first, direction, dew cell, spore cell with its ticks left. Turns logged at that tick or later are not applied. |
-| R-S4 | Every malformed request gets status 400 and `{"error": <code>, "message": ...}` with the documented code, and changes nothing. Limits: `ticks` at most 100000, body at most 65536 bytes. A fault inside the service answers 500 `internal_error` without the inner error text, and the service keeps serving. |
-| R-S5 | An unknown path gets 404, also a path that tries to leave `dist/`. A wrong method on a known path gets 405 with an `Allow` header. Both are JSON errors. |
+| R-S3 | `POST /api/step` answers the same fields after exactly `ticks` ticks (or at game over, if earlier), plus `state`: grid size, grub cells head first, direction, dew cell, spore cell with its ticks left. Turns logged at that tick or later are not applied. Made explicit in v8: nothing else in the body changes that; `finish` is checked as on `/api/replay` and then has no effect on `/api/step`. |
+| R-S4 | Every malformed request gets status 400 and `{"error": <code>, "message": ...}` with the documented code, and changes nothing. Limits: `ticks` at most 100000, body at most 65536 bytes. A fault inside the service answers 500 `internal_error` without the inner error text, and the service keeps serving. Added in v8: the head of a request (request line and headers) has the limit 131072, counted as the bytes of the request target plus the names and values of the headers: a count of 131071 is read, a count of 131072 is refused. The body limit stays as it is under the longest head: 65536 bytes are taken, 65537 are refused. A head at or over the limit answers 400 `head_too_large` and a head that is not valid HTTP answers 400 `bad_request`, both as the same JSON error with an `X-Request-Id` and a log line, and the service keeps serving. |
+| R-S5 | An unknown path gets 404, also a path that tries to leave `dist/`. A wrong method on a known path gets 405 with an `Allow` header. Both are JSON errors. Added in v8: the length of the request line changes none of this. A path or a query string as long as the largest body (65536 characters) is answered by its path like a short one: 404, 405, or the answer of the endpoint. |
 | R-S6 | Every response carries `X-Request-Id`: the caller's if it is 1 to 64 letters, digits or `-`, else a new one. One JSON log line per request on standard output, with the id, the method, the path without query, the status and the duration. |
 | R-S7 | Stateless: the same request gets the same response body, byte for byte, alone, repeated, and among concurrent other requests. |
 | R-S8 | The built page is served at `/` byte for byte. The service listens on `127.0.0.1` only, on the port from `PORT` (default 8787), and stops on SIGTERM. |
-| R-S9 | `docs/API.md` names every error code and both limits and has a curl example for each endpoint. |
-| R-S10 | No error grows with the input (added in v7, after the first outside test found a 65611-byte error body). Every error body is at most 512 bytes, on every error path, with the largest input the service reads. A value from the request is shown up to 40 characters, then `…`. The log line is at most 512 bytes too, cuts its path the same way and never carries the body. The same cut applies to the message for a wrong `PORT`. |
+| R-S9 | `docs/API.md` names every error code and every limit (two up to v7, three from v8) and has a curl example for each endpoint. |
+| R-S10 | No error grows with the input (added in v7, after the first outside test found a 65611-byte error body). Every error body is at most 512 bytes, on every error path, with the largest input the service reads. A value from the request is shown up to 40 characters, then `…`. The log line is at most 512 bytes too, cuts its path the same way and never carries the body. The same cut applies to the message for a wrong `PORT`. Added in v8: the same holds for a request whose head is refused, whatever its size; its error body and its log line are within 512 bytes and carry nothing of what was sent. |
 
 ## Player rules (added in v6; run in Node against a FAKE model server, never the real one)
 
@@ -83,6 +83,15 @@ is one step of the game clock. The **turn log** is the list of accepted turns, e
 | R-J6 | The key comes only from the environment variable `TYPESAFE_API_KEY`. Without it the tool exits with code 2, a clear message, and no request. The key never appears on standard output, on standard error or in the run record. |
 | R-J7 | A run record is written per game: seed, model, turn log, score, ticks, calls, how it stopped, and per decision the move, the probabilities, the confidence, the response time and the attempts. The replay address is in the record and is printed. |
 | R-J8 | The benchmark plays the same seeds with a random player, the scripted player and, only with a key, Jev: mean and median score, mean and median ticks, and how the games ended. It runs without any key, shows no number for Jev then, and keeps Jev inside a total budget. |
+
+## Release rules (added in v8; run against the repository as it is checked out)
+
+At tag `v7` the page reported `v6`, and the README pointed at files that were only committed after the tag.
+
+| id | rule |
+|---|---|
+| R-R1 | The version the page reports (`window.__dewgrub.version`) is the version being built. It is the newest version in the README's table of versions and the number in the README's row "versions". On a commit that carries a tag `vN` it is `vN`. On a commit without a tag, the newest tag in its history is that version (a commit made after a tag) or the one before it (work on the next version). |
+| R-R2 | Every path the README names is in the repository at the commit that is checked out. A path is a word that starts with a top-level folder of the repository and a slash, anywhere in the text, or a file name with an extension between backticks. A folder counts if a tracked file is inside it, a bare file name if a tracked file has that name. A word with a placeholder (`vN`, `<...>`, `*`) is a pattern, not a path. |
 
 ## Not provable by these tests
 
@@ -98,5 +107,5 @@ is one step of the game clock. The **turn log** is the list of accepted turns, e
 | NP-8 | It is usable with a screen reader. The label of R-B14 exists; nobody listened to it. |
 | NP-9 | It works at its public address. R-B15 proves a sub-path on a local test server; the real host, its headers and its caching were not tested, because nothing was deployed. |
 | NP-10 | The Jev player works with the real Jev model, and how well Jev plays. The real model was never called: the builder had no key. Every R-J rule is proven against a fake server written from the model's public API description. If the real API differs from that description, these tests do not notice. |
-| NP-11 | The service passes the independent acceptance test. That test is written and kept by somebody else; the builder never saw it. |
+| NP-11 | The service passes the independent acceptance test. That test is written and kept by somebody else; the builder never saw it. At v7 it did not pass (27 of 29 checks). The builder of v8 was given the names of the two failed checks and the rules they are about, nothing else; whether v8 passes is for that test to say. |
 | NP-12 | The first-steer start is easier for a first-time player. It removes the death before any steering; whether people find it clear was not tried with people. |

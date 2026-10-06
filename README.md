@@ -5,6 +5,8 @@ dew drops. Each drop makes the grub longer and the game faster. Hit a wall or yo
 
 The whole game is one file, `dist/index.html` (29 kB). An AI agent wrote it in one sitting, test-first, and every
 claim on this page points at output you can re-run. The game is the small part. The evidence is the point.
+(v1 to v7 are that one sitting, on 4 Oct 2026. v8, two days later, is a set of fixes by another session of the
+same kind of agent, after somebody else's tests failed twice on v7.)
 
 ## Play it
 
@@ -76,10 +78,10 @@ no number for Jev, and will not until a real run exists.
 | step | what | proves |
 |---|---|---|
 | 1 | `node --test test/` | the game logic, the browser-free parts of the presentation, the local service and the players obey their rules (the Jev player against a fake model server) |
-| 2 | `node tools/mutate.mjs` | the unit tests bite: the logic, the service and the players are broken on purpose 94 ways, and each time a unit test must fail |
+| 2 | `node tools/mutate.mjs` | the unit tests bite: the logic, the service and the players are broken on purpose 106 ways, and each time a unit test must fail |
 | 3 | `node tools/build.mjs --check` | the committed `dist/index.html` is exactly what the source builds to |
-| 4 | Playwright tests in `e2e/` | the built page works in headless Chromium: keyboard, touch, mouse, seed, replay, sound, pause, fit, sub-path, no network; the page and the service agree; the repository and its history hold nothing machine-specific or personal |
-| 5 | `node tools/mutate-page.mjs` | the browser tests bite: the page is broken on purpose 36 ways, and each time the named browser test must fail |
+| 4 | Playwright tests in `e2e/` | the built page works in headless Chromium: keyboard, touch, mouse, seed, replay, sound, pause, fit, sub-path, no network; the page and the service agree; the repository and its history hold nothing machine-specific or personal; the page reports the version being built and this README names only what is in the commit |
+| 5 | `node tools/mutate-page.mjs` | the browser tests bite: the page is broken on purpose 37 ways, and each time the named browser test must fail |
 | 6 | `node tools/trace.mjs` | every rule in `docs/REQUIREMENTS.md` is named by at least one test |
 
 Other commands: `node tools/build.mjs` rebuilds the page. `tools/numbers.sh` prints the numbers below from the
@@ -89,7 +91,7 @@ repository. `tools/evidence.sh vN` runs `./check.sh` on a fresh clone and stores
 
 ## How it was built
 
-1. **Rules first.** `docs/REQUIREMENTS.md` lists 53 checkable rules and 12 claims that no test here can prove. The
+1. **Rules first.** `docs/REQUIREMENTS.md` lists 55 checkable rules and 12 claims that no test here can prove. The
    rules were written before the tests, and the tests before the code. `evidence/v1/red-output.txt` is the test run
    at the first commit, failing because no game code existed yet.
 2. **Logic apart from drawing.** `src/game.js` has no browser in it: no clock, no random call, no DOM. Time is
@@ -98,7 +100,10 @@ repository. `tools/evidence.sh vN` runs `./check.sh` on a fresh clone and stores
 3. **A scripted player.** `tools/bot.mjs` plays real games: in Node for the unit tests, and in headless Chromium
    by pressing real keys and sending real touch events to the built page.
 4. **Small versions, each with evidence.** `evidence/vN/check-output.txt` is the raw output of `./check.sh` at tag
-   `vN`, with the command that produced it.
+   `vN`, with the command that produced it. It is made on a fresh clone of the tag, so it cannot be inside the
+   commit that carries the tag: it is committed on `main` straight after. A tag itself holds the check output of
+   every version before it, and its own `red-*.txt` files. So at tag `vN` this page points at `evidence/vN/` for
+   the red runs only. (At tag `v7` it pointed at files that were only on `main`; a test now fails on that, R-R2.)
 5. **Tests that were seen failing.** A test that has only ever passed has not been shown to check anything. So the
    code is broken on purpose (steps 2 and 5 above), and the tests must notice. New tests are also run against the
    tree before the change: the `red-*.txt` files in `evidence/`.
@@ -109,6 +114,10 @@ repository. `tools/evidence.sh vN` runs `./check.sh` on a fresh clone and stores
    and ran its own checks. From v6 on it also runs an independent test against the service, which the builder has
    never seen. Its results are not in this repository. A first run of that session's own scenarios against the v6
    service passed all 16 and still found one defect: an error body that repeated a 64 kB input. v7 fixes it.
+   Its harness then ran 29 checks against v7: 27 passed and 2 failed. The builder of v8 was told the names of the
+   two and the rules they are about, and nothing of what they contain or expect. Re-reading those rules against
+   the code found one disagreement for each (`DECISIONS.md` D18, D19); whether those are what the two checks
+   look for, the builder cannot know.
 
 | version | what it added | evidence |
 |---|---|---|
@@ -119,6 +128,7 @@ repository. `tools/evidence.sh vN` runs `./check.sh` on a fresh clone and stores
 | v5 | made fit for strangers: MIT license, nothing machine-specific in any tracked file, the three-command check, the sub-path test, a scripted gameplay clip | `evidence/v5/` (incl. `red-output.txt`: the new tests failing on the v4 tree) |
 | v6 | nothing moves before the first steer; the local HTTP service; the players, the Jev player and the benchmark; a neutral author on every commit | `evidence/v6/` (incl. four `red-*.txt`: the new tests failing before the change, and `quickstart-output.txt`) |
 | v7 | no error grows with the input: an error body and a log line are at most 512 bytes, a value from the request is shown up to 40 characters | `evidence/v7/` (incl. `red-error-size.txt`: the new tests failing on the v6 tree) |
+| v8 | `/api/step` plays exactly the ticks asked for, whatever else the body carries; a request line of any length is answered by its path, and a request head that cannot be read gets a JSON error; the page reports the version being built; this page names only what its commit holds | the red runs are added in the next commit |
 
 **The outputs in `evidence/v1` to `evidence/v5` were regenerated, twice.** At v5, because the ones first stored
 carried folder names of the machine they were made on. At v6, because the author of every commit was rewritten to a
@@ -129,30 +139,33 @@ names its git ref and command in its first lines. The outputs first stored are s
 (`git show v4:evidence/v4/check-output.txt`). One file could not be regenerated and was kept as it was:
 `evidence/v4/page-mutation-first-run.txt`, a run made while the tests were being edited. The `red-*.txt` files of
 v6 were made in the working folder before the code they test existed, and are kept as made. The one of v7 was made
-by `tools/red-proof.sh`: a fresh clone of tag `v6` with the v7 test file put on top.
+by `tools/red-proof.sh`: a fresh clone of tag `v6` with the v7 test file put on top. The two of v8 were made the
+same way, on a fresh clone of tag `v7`, from the commit before the one that carries tag `v8`.
 
 ## The numbers
 
-Printed by `tools/numbers.sh` at tag `v7`, except the last five rows, whose source is named.
+Printed by `tools/numbers.sh` on the commit that carries tag `v8`, except the row "versions" (the tag is made
+after the commit) and the last six rows, whose source is named.
 
 | what | number |
 |---|---|
-| lines of game source (`src/`, with comments and blank lines) | 902 |
+| lines of game source (`src/`, with comments and blank lines) | 903 |
 | of which game logic (`src/game.js`) | 209 |
-| lines of tests (`test/`, `e2e/`) | 2292 |
-| lines of tools (`tools/`, `check.sh`), the service and the players among them | 1603 |
-| size of the built page | 29027 bytes |
-| unit tests | 81 |
-| browser tests | 29 |
-| rules in the requirements, each named by a test | 53 |
-| deliberate faults in the logic, the service and the players, all caught | 94 |
-| deliberate page faults, all caught | 36 |
-| versions | 7 (tags `v1` to `v7`) |
+| lines of tests (`test/`, `e2e/`) | 2595 |
+| lines of tools (`tools/`, `check.sh`), the service and the players among them | 1665 |
+| size of the built page | 29139 bytes |
+| unit tests | 86 |
+| browser tests | 31 |
+| rules in the requirements, each named by a test | 55 |
+| deliberate faults in the logic, the service and the players, all caught | 106 |
+| deliberate page faults, all caught | 37 |
+| versions | 8 (tags `v1` to `v8`) |
 | runtime dependencies | 0 |
-| wall-clock time | The game (v1 to v4): 0.7 hours, 13:29 to 14:13 UTC on 4 Oct 2026. Fit for strangers (v5): about half an hour of work plus about 40 minutes of checks. Service, players and first-steer start (v6): about 40 minutes of work (15:31 to about 16:10 UTC), then the author rewrite and about 35 minutes of checks and evidence runs on fresh clones. The error-size rule (v7): about 20 minutes of work (17:33 to about 17:50 UTC), then the checks. The times of the commits are in `git log`. |
+| wall-clock time | The game (v1 to v4): 0.7 hours, 13:29 to 14:13 UTC on 4 Oct 2026. Fit for strangers (v5): about half an hour of work plus about 40 minutes of checks. Service, players and first-steer start (v6): about 40 minutes of work (15:31 to about 16:10 UTC), then the author rewrite and about 35 minutes of checks and evidence runs on fresh clones. The error-size rule (v7): about 20 minutes of work (17:33 to about 17:50 UTC), then the checks. The fixes of v8, by another session on 6 Oct 2026: about 35 minutes of work (12:52 to about 13:30 UTC), then the checks. The times of the commits are in `git log`. |
 | defects the blind review found | 4 confirmed and fixed, 1 accepted in part; none in the game logic (`evidence/review.md`) |
 | test weaknesses the blind review found | 6: 4 fixed, 1 was a wording fault in a rule, 1 rejected and listed below as not proven |
-| defects somebody else's test of the service found | 1: an error body that repeated the rejected input, 65611 bytes for a 65536-byte request. Looking for the same fault on every error path then found 2 more (the 405 message and the log line repeated a long path). All fixed in v7 (`DECISIONS.md` D17) |
+| defects somebody else's test of the service found | 3. At v6, 1: an error body that repeated the rejected input, 65611 bytes for a 65536-byte request. Looking for the same fault on every error path then found 2 more (the 405 message and the log line repeated a long path). All fixed in v7 (`DECISIONS.md` D17). At v7, 2 failed checks, known to the builder by name only: `/api/step` with `"finish": true` played on to game over, 10 ticks for the 3 asked; a request line over about 16 kB got an empty `431` answer with no request id and no log line. Fixed in v8 (D18, D19) |
+| faults somebody else saw in what v7 says about itself | 2: the page reported `v6`; this page pointed at `evidence/v7/`, which was only on `main`. Fixed in v8, each with a test (D20) |
 | defects the builder's own checks found | 3 by looking at screenshots; by deliberate faults, 2 holes in the unit tests and 1 in the browser tests up to v4 (`evidence/review.md`, last section), and at v6, 2 holes in the service tests (a path that left `dist/` and a service fault were not tested) and 1 in the browser tests (a right click that put the start panel away went unnoticed) |
 
 ## What is proven, and what is not
@@ -175,19 +188,25 @@ Printed by `tools/numbers.sh` at tag `v7`, except the last five rows, whose sour
 - The local service uses the game logic the page is built from, answers the documented fields, refuses every
   malformed request with the documented code, is stateless, and agrees with the page on a whole game. No error
   body and no log line is larger than 512 bytes, on any error path, with the largest input the service reads.
+  `/api/step` answers after exactly the ticks asked for, also with `"finish": true` in the body. A path or a query
+  of 65536 characters is answered like a short one, and a request head at or over its limit of 131072, or one that is not
+  HTTP, gets a JSON error with a request id and a log line, not an empty answer.
+- The page reports the version of the tag it is built at, and every path this page names is in the commit.
 - The Jev player, **against a fake model server**: one request per move with the documented body, retries on 429
   and 529 only, a hard budget, a key that never leaves the request, a run record with every decision.
 - No tracked file and no commit carries a home-folder path, a person's name or address, or the internal names of
   the workspace it was built in.
-- The tests are not decorative: 94 of 94 deliberate faults in the logic, the service and the players, and 36 of 36
-  deliberate page faults, make a test fail.
+- The tests are not decorative: 106 of 106 deliberate faults in the logic, the service and the players, and 37 of
+  37 deliberate page faults, make a test fail.
 
 **Not proven:**
 
 - **The Jev player works with the real Jev model, and how well Jev plays.** The real model was never called. If its
   API differs from its public description, these tests do not notice. There is no score for Jev anywhere here.
 - **The service passes the independent acceptance test.** That test belongs to somebody else and the builder never
-  saw it. The service was built from a written description of what it must do.
+  saw it. The service was built from a written description of what it must do. At v7 it did not pass: 27 of 29
+  checks. v8 fixes one disagreement between the service and its rules for each of the two failed checks, found
+  from their names alone. Whether v8 passes was not known when this was written.
 - **It is fun.** Nobody played it. Not the builder, not a person.
 - **The first-steer start is clearer for a first-time player.** It removes the death before any steering. Whether
   people understand "steer to start" was not tried with people.
@@ -209,8 +228,8 @@ Printed by `tools/numbers.sh` at tag `v7`, except the last five rows, whose sour
 - **The three-command check works on your machine.** It was proven on one Linux machine (see above). macOS and
   Windows were not tried.
 - **There are no defects left.** One blind review of v3, of about 3.5 minutes, by one agent of the same model
-  family, and 130 deliberate faults chosen by the builder. Faults nobody thought of are not covered: the defect
-  fixed in v7 was one of those, and somebody else's test found it.
+  family, and 143 deliberate faults chosen by the builder. Faults nobody thought of are not covered: the defect
+  fixed in v7 and the two fixed in v8 were of that kind, and somebody else's tests found them.
 - **Who wrote it.** That an AI agent wrote all of it is the agent's own record (`STACK.md` says which lines of
   evidence are independent and which are not). The commits carry a role name, not a person's.
 

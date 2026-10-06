@@ -13,16 +13,20 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 export const DEFAULT_PORT = 8787;
 export const HOST = '127.0.0.1';
-export const LIMITS = { ticks: 100000, bodyBytes: 65536 };
+// headBytes: the request line and the headers of one request, together. Twice the body limit, so that a request
+// line as long as the largest body is still read and answered by its path.
+export const LIMITS = { ticks: 100000, bodyBytes: 65536, headBytes: 131072 };
 export const ERROR_CODES = [
   'bad_json', 'bad_body', 'missing_field', 'bad_seed', 'bad_log', 'bad_ticks', 'bad_finish', 'body_too_large',
-  'not_found', 'method_not_allowed', 'internal_error',
+  'head_too_large', 'bad_request', 'not_found', 'method_not_allowed', 'internal_error',
 ];
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
 
 // No error body and no log line grows with what the caller sent: both are at most bodyBytes bytes, and a value
 // from the caller is shown up to `quoted` characters, then "…".
 export const ERROR_LIMITS = { bodyBytes: 512, quoted: 40 };
+// How long a connection whose head was refused is still read (and dropped) before it is closed.
+const HEAD_DRAIN_MS = 2000;
 
 export class Refusal extends Error {
   constructor(status, code, message, headers = {}) {
@@ -125,7 +129,8 @@ function playerState(g) {
 const API = {
   '/api/replay': async (req) => summary(play(parseRequest(await readBody(req), false))),
   '/api/step': async (req) => {
-    const g = play(parseRequest(await readBody(req), true));
+    // Exactly `ticks` ticks (R-S3). "finish" is checked like every field, and never plays a tick more here.
+    const g = play({ ...parseRequest(await readBody(req), true), finish: false });
     return { ...summary(g), state: playerState(g) };
   },
 };
@@ -158,7 +163,7 @@ async function answer(req, path, distDir, api) {
 export function createApp({ distDir = join(root, 'dist'), log = (line) => process.stdout.write(`${line}\n`), extraApi = {} } = {}) {
   const dist = resolve(distDir);
   const api = { ...API, ...extraApi };
-  return http.createServer(async (req, res) => {
+  const server = http.createServer({ maxHeaderSize: LIMITS.headBytes }, async (req, res) => {
     const began = process.hrtime.bigint();
     const sent = req.headers['x-request-id'];
     const id = typeof sent === 'string' && /^[A-Za-z0-9-]{1,64}$/.test(sent) ? sent : randomUUID();
@@ -185,6 +190,33 @@ export function createApp({ distDir = join(root, 'dist'), log = (line) => proces
     const ms = Number(process.hrtime.bigint() - began) / 1e6;
     log(JSON.stringify({ time: new Date().toISOString(), id, method: req.method, path: clip(path), status: out.status, ms: Math.round(ms * 1000) / 1000 }));
   });
+
+  // A head (request line and headers) that Node's parser refuses never reaches the handler above: it is larger
+  // than the limit, or it is not HTTP. It is answered here, once per connection, as the same kind of JSON error.
+  // The method and the path were not read, so the log line has null for both.
+  const refused = new WeakSet();
+  server.on('clientError', (err, socket) => {
+    if (refused.has(socket)) return;
+    refused.add(socket);
+    if (err.code === 'ECONNRESET' || !socket.writable) { socket.destroy(); return; }
+    const began = process.hrtime.bigint();
+    const r = err.code === 'HPE_HEADER_OVERFLOW'
+      ? bad('head_too_large', `the request line and the headers together reach the limit of ${LIMITS.headBytes} bytes`)
+      : bad('bad_request', 'the request is not valid HTTP');
+    const id = randomUUID();
+    const body = JSON.stringify({ error: r.code, message: r.message });
+    // Whatever is still arriving is read and dropped, so the caller gets the answer and not a reset connection.
+    socket.removeAllListeners('data');
+    socket.on('data', () => {});
+    socket.on('error', () => {});
+    socket.resume();
+    socket.end(`HTTP/1.1 ${r.status} Bad Request\r\nContent-Type: ${TYPES['.json']}\r\nContent-Length: ${Buffer.byteLength(body)}\r\n`
+      + `Cache-Control: no-store\r\nX-Request-Id: ${id}\r\nConnection: close\r\n\r\n${body}`);
+    setTimeout(() => socket.destroy(), HEAD_DRAIN_MS).unref();
+    const ms = Number(process.hrtime.bigint() - began) / 1e6;
+    log(JSON.stringify({ time: new Date().toISOString(), id, method: null, path: null, status: r.status, ms: Math.round(ms * 1000) / 1000 }));
+  });
+  return server;
 }
 
 // Run as a program.

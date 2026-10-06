@@ -137,3 +137,56 @@ that entry and does not have to take a message apart; the logic's rules did not 
 place every error leaves the service replaces any body over 512 bytes with a fixed message: the cut is the rule,
 the guard is for a message somebody adds later. Rejected: cutting the whole message at 512 bytes (it could cut
 through the JSON or leave half a sentence), and leaving the value out (the caller then has to guess which entry).
+
+## D18 — On `/api/step`, `finish` is checked and then ignored (6 Oct 2026, v8)
+
+Somebody else's harness ran 29 checks against v7; 2 failed. The builder of v8 was given their names and the rules
+they are about, not what they contain. The first is about R-S3, what `/api/step` answers. Reading the rule and
+`docs/API.md` against the code found one disagreement: the service read `finish` on both endpoints, so
+`{"seed":123,"log":"0D","ticks":3,"finish":true}` played on to the wall and answered `"ticks":10`, where the rule
+and the document both say "exactly `ticks` ticks" and the document lists no `finish` for this endpoint. The code
+was wrong, not the document. Now `/api/step` checks `finish` as before (a wrong value is still `bad_finish`, as
+the documented order of checks says) and never plays a tick more for it. Rejected: refusing `finish` on
+`/api/step` with an error (the documented order of checks treats it as a field of every body, and a caller that
+sends it gets what it asked for in `ticks`). **Not known:** whether this is what the failed check looks for.
+
+## D19 — The request head: read up to 131072 bytes, refused as JSON beyond (6 Oct 2026, v8)
+
+The second failed check is about R-S4, R-S5 and R-S10 and has "long request line" in its name. Found: a request
+whose line and headers pass Node's default limit (about 16 kB) never reached the service's code. Node answered
+`431 Request Header Fields Too Large` itself, with no body, no `X-Request-Id` and no log line. Measured at v7: a
+path of 16300 characters answered `404` as JSON, one of 16400 the empty `431`. A line that is not HTTP got an
+empty `400` the same way. The document says everything else is 404, every error is JSON, every response has a
+request id and every request a log line, and it names no 431. Two changes:
+
+- The limit on the head is now 131072 bytes, twice the body limit, so a request line as long as the largest body
+  is read and answered by its path like a short one: 404, 405, or the answer of the endpoint. No new code for
+  that.
+- Above that limit, and for a head that is not HTTP, the service answers itself: status 400, the JSON error body
+  with the new codes `head_too_large` and `bad_request`, a new request id, a log line with `null` for method and
+  path (neither was read), then it goes on reading what is still arriving for up to 2 seconds, so the caller is
+  not cut off while sending, and closes.
+
+Why 400 and not 431: R-S4 says every malformed request gets 400, and the body limit already answers 400
+`body_too_large`. Rejected: 431 with a JSON body (a status the rules do not name); 404 `not_found` (wrong when
+the long part is a query on a known path, or a header); keeping the 16 kB limit and only making the refusal JSON
+(a long path would then never get the 404 the document promises). The rules did not say which of these is right.
+The builder put the four to the session that gave the task and proposed this one. That session chose it, from
+the rules and the measurements only, and said it does not know what the failed check expects either. Its
+conditions: the 512-byte cap holds for the new codes, both sides of the boundary are stated and tested (a count
+of 131071 is read, 131072 is refused; what is counted is in `docs/API.md`), each new path has a deliberate
+fault, and the body limit does not move. **Not known:** whether this is what the failed check expects.
+
+## D20 — A version must be true about itself at its own tag (6 Oct 2026, v8)
+
+Two things somebody else saw at tag `v7`: the page reported `v6` (the constant was not raised for v7), and the
+README pointed at `evidence/v7/`, which was committed on `main` after the tag. Rule R-R1: the version the page
+reports is the README's newest version and the tag of the commit. Rule R-R2: every path the README names is in
+the commit. Both are browser-suite tests, so `./check.sh` on a fresh clone of a tag fails if either is broken.
+
+The second rule meets a real limit: the output of the full check on a fresh clone of a tag cannot be inside the
+commit the tag points at. So the order is now fixed. The commit that gets the tag holds its own red runs
+(`tools/red-proof.sh` takes the new tests from the commit before it), and the README at the tag points at those
+only. The check output of the tag is committed on `main` straight after, and the README says that this is where
+it is. Rejected: moving the tag after the evidence commit (the evidence would then describe another commit than
+the one it is stored in), and exempting `evidence/` from R-R2 (that is the fault the rule is for).

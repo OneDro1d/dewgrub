@@ -3,6 +3,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import net from 'node:net';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -17,6 +18,8 @@ const FIELDS = ['seed', 'status', 'cause', 'score', 'dew', 'spores', 'length', '
 // caller sent is shown up to 40 characters.
 const MAX_ERROR_BYTES = 512;
 const MAX_QUOTED = 40;
+// R-S4, R-S5 (v8): the request line and the headers of one request are read up to 131072 bytes together.
+const MAX_HEAD_BYTES = 131072;
 
 let server;
 let base;
@@ -49,6 +52,51 @@ async function call(path, body, { method = 'POST', headers = {}, raw } = {}) {
   try { json = JSON.parse(text); } catch (e) { /* not JSON */ }
   return { status: res.status, headers: res.headers, text, json };
 }
+
+// One request written to a socket as given, for what fetch cannot send: a request line of any length, a request
+// that is not HTTP. Answers what came back, parsed the same way as call().
+// pieces > 1 sends the text in that many parts, 25 ms apart, as a caller on a slow line would.
+function rawCall(text, pieces = 1) {
+  return new Promise((done) => {
+    // Half-open: the caller keeps sending after the service has answered and closed its side, and sees it if
+    // the service then refuses what is still on its way.
+    const socket = net.connect({ port: server.address().port, host: '127.0.0.1', allowHalfOpen: true });
+    const chunks = [];
+    let failure = null;
+    const timer = setTimeout(() => socket.destroy(), 10000);
+    socket.on('data', (d) => chunks.push(d));
+    socket.on('error', (e) => { failure = e.code; });
+    socket.on('close', () => {
+      clearTimeout(timer);
+      const all = Buffer.concat(chunks).toString('utf8');
+      const cut = all.indexOf('\r\n\r\n');
+      const head = (cut < 0 ? all : all.slice(0, cut)).split('\r\n');
+      const body = cut < 0 ? '' : all.slice(cut + 4);
+      const headers = new Map(head.slice(1).map((l) => [l.slice(0, l.indexOf(':')).toLowerCase(), l.slice(l.indexOf(':') + 1).trim()]));
+      let json = null;
+      try { json = JSON.parse(body); } catch (e) { /* not JSON */ }
+      done({ status: Number((/^HTTP\/1\.1 (\d{3})/.exec(head[0]) || [])[1]), statusLine: head[0], headers, text: body, json, failure });
+    });
+    const size = Math.ceil(text.length / pieces);
+    let sent = 0;
+    const send = () => {
+      if (socket.destroyed) return;
+      socket.write(text.slice(sent, sent + size));
+      sent += size;
+      if (sent < text.length) setTimeout(send, 25);
+      else if (answered) socket.end();
+    };
+    // The caller closes its side only when the service has closed its own and everything was sent.
+    let answered = false;
+    socket.on('end', () => {
+      answered = true;
+      if (sent >= text.length) socket.end();
+    });
+    send();
+  });
+}
+const request = (method, target, { id, body } = {}) => `${method} ${target} HTTP/1.1\r\nHost: test\r\n${id ? `X-Request-Id: ${id}\r\n` : ''}`
+  + `${body !== undefined ? `Content-Length: ${Buffer.byteLength(body)}\r\n` : ''}Connection: close\r\n\r\n${body !== undefined ? body : ''}`;
 
 // A whole game by the scripted player, straight from the logic: the reference the service must agree with.
 function botGame(seed, maxTicks = 300) {
@@ -147,6 +195,38 @@ test('R-S3 step stops at game over and reports the tick it happened on', async (
   assert.deepEqual(r.json.state.grub[0], { x: 10, y: 0 });
 });
 
+test('R-S3 step plays exactly n ticks whatever else the body carries: "finish" never plays a tick more', async () => {
+  // Added in v8. At v7, "finish": true on /api/step played on to game over: 10 ticks for the 3 that were asked.
+  const plain = await call('/api/step', { seed: 123, log: '0D', ticks: 3 });
+  assert.deepEqual([plain.json.status, plain.json.ticks], ['playing', 3]);
+  for (const finish of [true, false]) {
+    const r = await call('/api/step', { seed: 123, log: '0D', ticks: 3, finish });
+    assert.equal(r.status, 200);
+    assert.deepEqual([r.json.status, r.json.cause, r.json.ticks], ['playing', null, 3], `finish: ${finish}`);
+    assert.equal(r.text, plain.text, `finish: ${finish}`);
+  }
+  const zero = await call('/api/step', { seed: 123, log: '', ticks: 0, finish: true });
+  assert.deepEqual([zero.json.status, zero.json.ticks, zero.json.length], ['playing', 0, 3]);
+  // On scripted games, at every 7th tick of the game: the answer is the logic after exactly that many ticks.
+  for (let seed = 1; seed <= 6; seed++) {
+    const whole = botGame(seed, 120);
+    const g = createGame(seed);
+    start(g);
+    let i = 0;
+    for (let n = 0; n <= whole.tick; n++) {
+      if (n % 7 === 0 || n === whole.tick) {
+        const r = await call('/api/step', { seed, log: encodeLog(whole.log), ticks: n, finish: true });
+        assert.deepEqual([r.json.ticks, r.json.hash], [n, stateHash(g)], `seed ${seed}, ${n} ticks`);
+      }
+      while (i < whole.log.length && whole.log[i].t === g.tick) turn(g, whole.log[i++].d);
+      step(g);
+    }
+  }
+  // "finish" is still checked on /api/step, as the order of checks in docs/API.md says.
+  const wrong = await call('/api/step', { seed: 123, log: '0D', ticks: 3, finish: 'yes' });
+  assert.deepEqual([wrong.status, wrong.json.error], [400, 'bad_finish']);
+});
+
 test('R-S3 step shows the spore with its ticks left', async () => {
   // Find, from the logic, a scripted game and a tick where a spore is on the board.
   let found = null;
@@ -207,6 +287,8 @@ test('R-S4 every malformed request gets 400 with its error code and a message', 
   seen.add('not_found');
   seen.add('method_not_allowed');
   seen.add('internal_error'); // status 500, see the next test
+  seen.add('head_too_large'); // these two are refused before a path is known: see the tests of the request head
+  seen.add('bad_request');
   assert.deepEqual([...seen].sort(), [...ERROR_CODES].sort());
 });
 
@@ -222,7 +304,7 @@ test('R-S4 a fault inside the service answers 500 internal_error, leaks nothing,
 });
 
 test('R-S4 the limits: the largest allowed ticks and body are accepted', async () => {
-  assert.deepEqual(LIMITS, { ticks: 100000, bodyBytes: 65536 });
+  assert.deepEqual(LIMITS, { ticks: 100000, bodyBytes: 65536, headBytes: 131072 });
   const ok = await call('/api/step', { seed: 1, log: '', ticks: LIMITS.ticks });
   assert.equal(ok.status, 200);
   const pad = ' '.repeat(LIMITS.bodyBytes - '{"seed":1,"log":""}'.length);
@@ -254,6 +336,137 @@ test('R-S5 unknown paths get 404 and wrong methods get 405, both as JSON errors'
     assert.equal(r.json.error, 'method_not_allowed');
     assert.equal(r.headers.get('allow'), allow);
   }
+});
+
+// ---- v8: the head of a request (its request line and its headers) ----
+// At v7 a head above Node's default limit, about 16 kB, never reached the service: the caller got a bare
+// "431 Request Header Fields Too Large" with no body, no X-Request-Id and no log line.
+
+test('R-S5 a long request line is answered by its path, exactly like a short one', async () => {
+  const built = readFileSync(join(root, 'dist', 'index.html'), 'utf8');
+  for (const n of [16400, 40000, LIMITS.bodyBytes, MAX_HEAD_BYTES - 1024]) {
+    rawLines.length = 0;
+    const id = `long-${n}`;
+    const r = await rawCall(request('GET', `/${'n'.repeat(n)}`, { id }));
+    const label = `a path of ${n} characters`;
+    assert.equal(r.status, 404, `${label}: ${r.statusLine}`);
+    assert.deepEqual(r.json, { error: 'not_found', message: 'no such path' }, label);
+    assert.match(r.headers.get('content-type'), /^application\/json/, label);
+    assert.equal(r.headers.get('x-request-id'), id, label);
+    const mine = rawLines.map((l) => JSON.parse(l)).filter((l) => l.id === id);
+    assert.deepEqual(mine.map((l) => [l.method, l.path, l.status]), [['GET', `/${'n'.repeat(39)}…`, 404]], label);
+  }
+  // The same with a long query: the path decides, the query is not looked at.
+  const q = 'q'.repeat(LIMITS.bodyBytes);
+  const short = await call('/api/replay', { seed: 123, log: '0D.7R' });
+  const long = await rawCall(request('POST', `/api/replay?${q}`, { body: JSON.stringify({ seed: 123, log: '0D.7R' }) }));
+  assert.equal(long.status, 200, long.statusLine);
+  assert.equal(long.text, short.text);
+  const wrongMethod = await rawCall(request('GET', `/api/step?${q}`));
+  assert.deepEqual([wrongMethod.status, wrongMethod.json && wrongMethod.json.error, wrongMethod.headers.get('allow')], [405, 'method_not_allowed', 'POST'], wrongMethod.statusLine);
+  const badBody = await rawCall(request('POST', `/api/step?${q}`, { body: '{"seed": 1, "log": ' }));
+  assert.deepEqual([badBody.status, badBody.json && badBody.json.error], [400, 'bad_json'], badBody.statusLine);
+  const page = await rawCall(request('GET', `/?${q}`));
+  assert.equal(page.status, 200, page.statusLine);
+  assert.equal(page.text, built);
+  assert.equal(LIMITS.headBytes, MAX_HEAD_BYTES);
+});
+
+test('R-S4 the limit on the request head, on both sides: a count of 131071 bytes is read, 131072 is refused', async () => {
+  // What is counted: the request target and the name and the value of every header. request() without an id
+  // sends "Host: test" and "Connection: close", 23 counted bytes.
+  const HEADERS = 'Host'.length + 'test'.length + 'Connection'.length + 'close'.length;
+  const fill = (start, letter, count) => start + letter.repeat(count - HEADERS - start.length);
+  const built = readFileSync(join(root, 'dist', 'index.html'), 'utf8');
+  const short = await call('/api/replay', { seed: 123, log: '0D.7R' });
+  const body = JSON.stringify({ seed: 123, log: '0D.7R' });
+  // In a path.
+  const lastRead = await rawCall(request('GET', fill('/', 'n', MAX_HEAD_BYTES - 1)));
+  assert.deepEqual([lastRead.status, lastRead.json && lastRead.json.error], [404, 'not_found'], lastRead.statusLine);
+  assert.equal(await refusedHead('a path that makes the count 131072', request('GET', fill('/', 'n', MAX_HEAD_BYTES)), 'n'.repeat(41)), 'head_too_large');
+  // In a query on an API path. "Content-Length: 27" is a header too: 16 more counted bytes.
+  const more = 'Content-Length'.length + String(Buffer.byteLength(body)).length;
+  const query = (count) => request('POST', fill('/api/replay?', 'q', count - more), { body });
+  const lastQuery = await rawCall(query(MAX_HEAD_BYTES - 1));
+  assert.equal(lastQuery.status, 200, lastQuery.statusLine);
+  assert.equal(lastQuery.text, short.text);
+  assert.equal(await refusedHead('a query that makes the count 131072', query(MAX_HEAD_BYTES), 'q'.repeat(41)), 'head_too_large');
+  // In one header.
+  const header = (count) => `GET / HTTP/1.1\r\nHost: test\r\nX-Big: ${'h'.repeat(count - HEADERS - '/'.length - 'X-Big'.length)}\r\nConnection: close\r\n\r\n`;
+  const lastHeader = await rawCall(header(MAX_HEAD_BYTES - 1));
+  assert.equal(lastHeader.status, 200, lastHeader.statusLine);
+  assert.equal(lastHeader.text, built);
+  assert.equal(await refusedHead('a header that makes the count 131072', header(MAX_HEAD_BYTES), 'h'.repeat(41)), 'head_too_large');
+  // The limit of v7 (Node's default, 16384) is no boundary any more: both sides of it are read.
+  for (const count of [16383, 16384, 16385]) {
+    const r = await rawCall(request('GET', fill('/', 'n', count)));
+    assert.deepEqual([r.status, r.json && r.json.error], [404, 'not_found'], `a count of ${count}: ${r.statusLine}`);
+  }
+  // The larger head did not move the body limit: under the longest head that is read, 65536 bytes of body are
+  // taken and 65537 are refused.
+  const longTarget = (extra) => fill('/api/replay?', 'q', MAX_HEAD_BYTES - 1 - 'Content-Length'.length - String(LIMITS.bodyBytes + extra).length);
+  const full = `{"seed":123,"log":"0D.7R"${' '.repeat(LIMITS.bodyBytes - body.length)}}`;
+  assert.equal(Buffer.byteLength(full), LIMITS.bodyBytes);
+  const fullBody = await rawCall(request('POST', longTarget(0), { body: full }));
+  assert.equal(fullBody.status, 200, fullBody.statusLine);
+  assert.equal(fullBody.text, short.text);
+  const overBody = await rawCall(request('POST', longTarget(1), { body: `${full} ` }));
+  assert.deepEqual([overBody.status, overBody.json && overBody.json.error], [400, 'body_too_large'], overBody.statusLine);
+});
+
+// What every refusal of a head must look like. Returns the error code that was answered.
+async function refusedHead(label, text, piece, pieces = 1) {
+  rawLines.length = 0;
+  const r = await rawCall(text, pieces);
+  assert.equal(r.status, 400, `${label}: ${r.statusLine}`);
+  // The service goes on reading what is still on its way, so the caller is never cut off while sending.
+  assert.equal(r.failure, null, `${label}: the connection failed while the request was being sent`);
+  assert.ok(r.json, `${label}: the body is not JSON: ${JSON.stringify(r.text.slice(0, 60))}`);
+  assert.deepEqual(Object.keys(r.json).sort(), ['error', 'message'], label);
+  assert.ok(typeof r.json.message === 'string' && r.json.message.length > 5, label);
+  assert.match(r.headers.get('content-type'), /^application\/json/, label);
+  assert.equal(r.headers.get('cache-control'), 'no-store', label);
+  assert.equal(Number(r.headers.get('content-length')), Buffer.byteLength(r.text), label);
+  const bytes = Buffer.byteLength(r.text);
+  assert.ok(bytes <= MAX_ERROR_BYTES, `${label}: the error body is ${bytes} bytes`);
+  if (piece) assert.ok(!r.text.includes(piece), `${label}: the answer repeats 41 characters of the input`);
+  const id = r.headers.get('x-request-id');
+  assert.match(id, /^[A-Za-z0-9-]{1,64}$/, label);
+  assert.equal(rawLines.length, 1, `${label}: log lines`);
+  const line = JSON.parse(rawLines[0]);
+  assert.deepEqual([line.id, line.method, line.path, line.status], [id, null, null, 400], label);
+  assert.ok(typeof line.ms === 'number' && !Number.isNaN(Date.parse(line.time)), label);
+  assert.ok(Buffer.byteLength(rawLines[0]) <= MAX_ERROR_BYTES, `${label}: the log line is ${Buffer.byteLength(rawLines[0])} bytes`);
+  if (piece) assert.ok(!rawLines[0].includes(piece), `${label}: the log line repeats 41 characters of the input`);
+  return r.json.error;
+}
+const TOO_LARGE_HEADS = () => [
+  ['a path one byte longer than the whole limit', request('GET', `/${'n'.repeat(MAX_HEAD_BYTES)}`, { id: 'head-1' }), 'n'.repeat(41)],
+  ['a path of four times the limit', request('GET', `/${'m'.repeat(4 * MAX_HEAD_BYTES)}`), 'm'.repeat(41)],
+  ['a query of twice the limit on an API path', request('POST', `/api/replay?${'q'.repeat(2 * MAX_HEAD_BYTES)}`, { body: '{"seed":1,"log":""}' }), 'q'.repeat(41)],
+  ['one header of the whole limit', `GET / HTTP/1.1\r\nHost: test\r\nX-Big: ${'h'.repeat(MAX_HEAD_BYTES)}\r\nConnection: close\r\n\r\n`, 'h'.repeat(41)],
+];
+const NOT_HTTP = () => [
+  ['a line that is not a request', 'THIS IS NOT A REQUEST\r\n\r\n', null],
+  ['a long line that is not a request', `${'z'.repeat(3000)}\r\n\r\n`, 'z'.repeat(41)],
+  ['a header line with no colon', 'GET / HTTP/1.1\r\nHost: test\r\nthis is not a header\r\n\r\n', null],
+];
+
+test('R-S4 a request head over the limit and a request that is not HTTP get 400 as JSON, and the service keeps serving', async () => {
+  const good = await call('/api/replay', { seed: 5, log: '0U' });
+  for (const [label, text, piece] of TOO_LARGE_HEADS()) assert.equal(await refusedHead(label, text, piece), 'head_too_large', label);
+  for (const [label, text, piece] of NOT_HTTP()) assert.equal(await refusedHead(label, text, piece), 'bad_request', label);
+  assert.equal((await call('/api/replay', { seed: 5, log: '0U' })).text, good.text);
+});
+
+test('R-S10 a refused request head gets an error body and a log line within 512 bytes, whatever its size', async () => {
+  const heads = [...TOO_LARGE_HEADS(), ...NOT_HTTP(),
+    ['a path of 2 MB', request('GET', `/${'b'.repeat(2 * 1024 * 1024)}`), 'b'.repeat(41)]];
+  const seen = new Set();
+  for (const [label, text, piece] of heads) seen.add(await refusedHead(label, text, piece));
+  assert.deepEqual([...seen].sort(), ['bad_request', 'head_too_large']);
+  // Sent in 8 parts over 175 ms: the refusal goes out after the first part, and the other seven are still taken.
+  assert.equal(await refusedHead('a path of 2 MB in 8 parts', request('GET', `/${'s'.repeat(2 * 1024 * 1024)}`), 's'.repeat(41), 8), 'head_too_large');
 });
 
 test('R-S6 the caller\'s X-Request-Id comes back, and an invalid or missing one is replaced', async () => {
@@ -353,6 +566,7 @@ test('R-S9 docs/API.md names every error code, both limits, and a curl example f
   for (const code of ERROR_CODES) assert.ok(doc.includes(`\`${code}\``), `docs/API.md does not name ${code}`);
   assert.ok(doc.includes(String(LIMITS.ticks)), 'the ticks limit is not in the doc');
   assert.ok(doc.includes(String(LIMITS.bodyBytes)), 'the body limit is not in the doc');
+  assert.ok(doc.includes(String(LIMITS.headBytes)), 'the limit on the request head is not in the doc');
   for (const path of ['/api/replay', '/api/step']) {
     assert.match(doc, new RegExp(`curl[^\\n]*${path}`), `no curl example for ${path}`);
   }
@@ -426,7 +640,8 @@ test('R-S10 on every error path, with the largest input, the error body and the 
     assert.equal(JSON.parse(mine[0]).status, status, label);
     seen.add(code);
   }
-  assert.deepEqual([...seen].sort(), [...ERROR_CODES].sort(), 'every error code has a largest-input case');
+  // The two codes of a refused request head have their largest-input cases in the test of the request head below.
+  assert.deepEqual([...seen, 'head_too_large', 'bad_request'].sort(), [...ERROR_CODES].sort(), 'every error code has a largest-input case');
 });
 
 test('R-S10 a rejected value is quoted up to 40 characters, then "…", and a short one is quoted whole', async () => {

@@ -85,6 +85,8 @@ const MUTANTS = [
     'test_R_B1_loads_clean_and_draws'],
   ['the page uses a module script, which file:// refuses', 'src/index.template.html', '<script>__JS__</script>', '<script type="module" src="main.js"></script>',
     'test_R_B10_works_opened_from_disk'],
+  ['the page reports another version than the one being built', 'src/main.js', 'version: VERSION,', "version: 'v6',",
+    'test_R_R1_the_page_reports_the_version_being_built'],
 ];
 
 // MUTATE_PAGE_ONLY="mouse" runs only the faults whose description contains that text. Default: all.

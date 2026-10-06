@@ -61,7 +61,7 @@ const SERVICE = [
   ['GET on an API path is not refused', "if (req.method !== 'POST') throw new Refusal(405, 'method_not_allowed', `${path} takes POST`, { Allow: 'POST' });", ''],
   ['POST on the page is not refused', "if (req.method !== 'GET' && req.method !== 'HEAD') {", 'if (false) {'],
   ['the log line carries the query string', 'method: req.method, path: clip(path), status: out.status', 'method: req.method, path: clip(req.url), status: out.status'],
-  ['the log line has no duration', ', ms: Math.round(ms * 1000) / 1000 }', ' }'],
+  ['the log line has no duration', 'status: out.status, ms: Math.round(ms * 1000) / 1000 }', 'status: out.status }'],
   ['the spore\'s ticks left are not reported', 'ticksLeft: g.spore.ttl', 'ticksLeft: 0'],
   ['score reports the dew count', 'score: g.score, dew: g.dewEaten', 'score: g.dewEaten, dew: g.dewEaten'],
   ['step leaves out the state', 'return { ...summary(g), state: playerState(g) };', 'return summary(g);'],
@@ -78,6 +78,19 @@ const SERVICE = [
   ['the 405 message repeats the whole path', '`${clip(path)} takes GET or HEAD`', '`${path} takes GET or HEAD`'],
   ['the log line carries the whole path', 'path: clip(path), status', 'path, status'],
   ['the message for a wrong PORT repeats the whole value', 'not "${clip(process.env.PORT)}"', 'not "${process.env.PORT}"'],
+  // v8, rule R-S3: step plays exactly the ticks asked for. Rules R-S4, R-S5, R-S10: the head of a request.
+  ['step obeys "finish" and plays on to game over', 'parseRequest(await readBody(req), true), finish: false }', 'parseRequest(await readBody(req), true) }'],
+  ['a request line above Node\'s default limit is not read', 'http.createServer({ maxHeaderSize: LIMITS.headBytes }, async', 'http.createServer({}, async'],
+  ['the limit on the request head is twice what the document says', 'http.createServer({ maxHeaderSize: LIMITS.headBytes }, async', 'http.createServer({ maxHeaderSize: 2 * LIMITS.headBytes }, async'],
+  ['the limit on the request head is one byte lower', 'http.createServer({ maxHeaderSize: LIMITS.headBytes }, async', 'http.createServer({ maxHeaderSize: LIMITS.headBytes - 1 }, async'],
+  ['a head that cannot be read gets Node\'s own empty answer', "  server.on('clientError', (err, socket) => {\n    if (refused.has(socket)) return;", "  server.on('never', (err, socket) => {\n    if (refused.has(socket)) return;"],
+  ['a head over the limit is called bad_request', "err.code === 'HPE_HEADER_OVERFLOW'", "err.code === 'never'"],
+  ['a request that is not HTTP is called head_too_large', "err.code === 'HPE_HEADER_OVERFLOW'", "err.code !== 'never'"],
+  ['a refused head is answered with status 431', 'socket.end(`HTTP/1.1 ${r.status} Bad Request', 'socket.end(`HTTP/1.1 431 Request Header Fields Too Large'],
+  ['a refused head gets no request id', "Cache-Control: no-store\\r\\nX-Request-Id: ${id}\\r\\nConnection", 'Cache-Control: no-store\\r\\nConnection'],
+  ['a refused head leaves no log line', '    log(JSON.stringify({ time: new Date().toISOString(), id, method: null,', '    if (false) log(JSON.stringify({ time: new Date().toISOString(), id, method: null,'],
+  ['a refused head is logged with the whole of what arrived', 'method: null, path: null, status: r.status,', 'method: null, path: String(err.rawPacket), status: r.status,'],
+  ['the connection of a refused head is cut at once, before the answer is out', 'setTimeout(() => socket.destroy(), HEAD_DRAIN_MS).unref();', 'socket.destroy();'],
 ];
 
 // [what is broken, text in tools/jev-player.mjs, replacement]

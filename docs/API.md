@@ -19,6 +19,10 @@ It listens on `127.0.0.1` only. It is not meant to be put on the internet. Stop 
 
 Everything else is `404`. A wrong method on a known path is `405` with an `Allow` header.
 
+The path alone decides, whatever the length of the request line: a path or a query string of 65536 characters is
+answered like a short one. The only requests that are not answered by their path are the ones whose head the
+service cannot read, see `head_too_large` and `bad_request` under Errors.
+
 The service is **stateless**: it keeps nothing between requests, and the same request always gets the same response
 body, byte for byte.
 
@@ -69,6 +73,10 @@ Body: `{"seed": <integer>, "log": "<turn log>", "ticks": <integer 0 to 100000>}`
 The game is played for **exactly `ticks` ticks**, or until game over if that comes first (`ticks` in the answer is
 then the tick the game ended on). Turns logged at tick `ticks` or later are in the future and are not applied.
 
+`finish` belongs to `/api/replay`. On `/api/step` it is checked like there (a value that is not `true` or `false`
+answers `bad_finish`) and then has no effect: with `"finish": true` the answer is still the game after exactly
+`ticks` ticks, byte for byte the answer without it.
+
 The answer has the fields of `/api/replay` plus `state`, which is what a player needs to choose the next turn:
 
     curl -s -X POST http://127.0.0.1:8787/api/step -d '{"seed": 123, "log": "0D", "ticks": 3}'
@@ -103,12 +111,19 @@ changes nothing (there is nothing to change: the service keeps no state).
 | 400 | `bad_ticks` | `ticks` is not an integer from 0 to 100000 |
 | 400 | `bad_finish` | `finish` is present and not `true` or `false` |
 | 400 | `body_too_large` | the body is larger than 65536 bytes |
+| 400 | `head_too_large` | the head of the request (its request line and its headers) reaches the limit of 131072; what is counted, and both sides of the boundary, are under Limits |
+| 400 | `bad_request` | the head of the request is not valid HTTP: a first line that is not a request line, a header line without a colon, an HTTP/1.1 request without a `Host` header |
 | 404 | `not_found` | no such path |
 | 405 | `method_not_allowed` | the path exists but not with this method; see the `Allow` header |
 | 500 | `internal_error` | a fault of the service itself. The message never carries the inner error. The tests found no real request that causes it; they provoke it through a failing route that only the test adds. |
 
 Checks are made in this order: size, JSON, object, missing fields, seed, log, ticks, finish. So a body with a bad
 seed and a bad log answers `bad_seed`.
+
+`head_too_large` and `bad_request` come before all of that, and before the path and the method are known: the
+head could not be read, so the service cannot tell which path was meant. Such a request is answered with status
+400 and the JSON body above, a new `X-Request-Id` (the caller's was not read), and `Connection: close`; the
+service then closes the connection. Up to v7 these requests got Node's own answer, an empty `431` or `400`.
 
 An error never grows with what was sent. Every error body is at most **512** bytes. Where a message shows a value
 from the request (the rejected entry of a turn log, a path), it shows the first **40** characters, then `…`:
@@ -118,7 +133,18 @@ from the request (the rejected entry of a turn log, a path), it shows the first 
 ## Limits
 
 - `ticks`: 0 to **100000**.
-- Body: at most **65536** bytes.
+- Body: at most **65536** bytes. A body of 65536 bytes is taken, one of 65537 answers `body_too_large`. The limit
+  on the head does not change this one.
+- Head (request line and headers): the limit is **131072**, twice the body limit, so a request line as long as the
+  largest body is still read. This is Node's `maxHeaderSize`, and the count is Node's: the bytes of the request
+  target (path and query) plus the bytes of the name and of the value of every header. The method, the spaces, the
+  colons and the line ends are not counted. **A count of 131071 is the largest that is read; a count of 131072 is
+  the smallest that is refused** with `head_too_large`. With `Host: test` and `Connection: close` as the only
+  headers (23 counted bytes) that is a target of 131048 bytes read, and one of 131049 refused. The same boundary
+  holds when the bytes are in the query or in one header. Measured on Node 20; a test holds both sides.
+- What one request can make the service hold: its head, up to the limit above, and its body, up to 65536 bytes;
+  what comes after the 65536th byte of a body is read and dropped. Of a request whose head is refused nothing is
+  kept: what is still arriving is read and dropped for at most 2 seconds, then the connection is closed.
 - `seed`: 0 to 4294967295. The page accepts larger numbers and wraps them; the API does not, it answers `bad_seed`.
 - Error body: at most **512** bytes. Log line: at most 512 bytes.
 
@@ -132,7 +158,9 @@ The service writes one JSON line per request on its standard output:
     {"time":"2026-10-04T16:00:00.000Z","id":"Run-42","method":"POST","path":"/api/step","status":200,"ms":0.412}
 
 `path` is the path without the query string, cut after 40 characters with `…` like a value in an error message. The
-line never carries the body of the request. `ms` is the time the request took, in milliseconds. When it starts it
+line never carries the body of the request. `ms` is the time the request took, in milliseconds. A request refused
+with `head_too_large` or `bad_request` has its line too, with `"method":null,"path":null`: neither was read. When
+it starts it
 writes one line of another kind: `{"time":"…","event":"listening","host":"127.0.0.1","port":8787}`.
 
 ## Other response headers
